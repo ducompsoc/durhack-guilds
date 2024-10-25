@@ -16,6 +16,7 @@ export function NewQuest({ save }: { save: () => void }) {
   const [dependencyMode, setDependencyMode] = useState(dependencyModes[0]);
   const [points, setPoints] = useState(0);
   const [challenges, setChallenges] = useState<any[]>([]);
+  const [disabled, setDisabled] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -23,6 +24,7 @@ export function NewQuest({ save }: { save: () => void }) {
     if (!name) return setError("Please set a name!");
     if (!description) return setError("Please set a description!");
     if (challenges.length === 0) return setError("Please include at least one challenge!");
+    setDisabled(true);
     try {
       await fetchMegateamsApi("/quests", {
         method: "POST",
@@ -31,7 +33,7 @@ export function NewQuest({ save }: { save: () => void }) {
           description,
           dependencyMode: dependencyMode,
           points: points,
-          challenges: challenges.map(challenge => challenge.id)
+          challenges: challenges.map((challenge) => challenge.id),
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -44,6 +46,7 @@ export function NewQuest({ save }: { save: () => void }) {
     } catch {
       setError("Failed to create quest!");
     }
+    setDisabled(false);
   }
 
   return (
@@ -64,7 +67,11 @@ export function NewQuest({ save }: { save: () => void }) {
         onChange={(e) => setDescription(e.target.value)}
       />
       <div className="flex items-center gap-2">
-        <select className="my-2 dh-input w-full" value={dependencyMode} onChange={(e) => setDependencyMode(e.target.value)}>
+        <select
+          className="my-2 dh-input w-full"
+          value={dependencyMode}
+          onChange={(e) => setDependencyMode(e.target.value)}
+        >
           {dependencyModes.map((qrType) => (
             <option key={qrType} value={qrType}>
               {qrType}
@@ -92,7 +99,7 @@ export function NewQuest({ save }: { save: () => void }) {
         onChange={(challenges) => setChallenges([...challenges])}
         placeholder="Choose challenges..."
       />
-      <button onClick={() => submitForm()} className="dh-btn w-full mt-2">
+      <button onClick={() => submitForm()} disabled={disabled} className="dh-btn w-full mt-2">
         Create
       </button>
       {error && <p className="dh-err">{error}</p>}

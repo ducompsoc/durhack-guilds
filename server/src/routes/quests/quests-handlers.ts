@@ -5,6 +5,7 @@ import { requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators
 import { UserRole } from "@server/common/model-enums"
 import type { Middleware, Request, Response } from "@server/types"
 import { prisma, Quest_dependency_mode } from "@server/database"
+import { checkForQuestCompletion } from "@server/common/check-for-quest-completion"
 
 class QuestsHandlers {
   @requireUserIsAdmin()
@@ -94,7 +95,7 @@ class QuestsHandlers {
   @requireUserIsAdmin()
   createQuest(): Middleware {
     return async (request: Request, response: Response) => {
-      const create_attributes = QuestsHandlers.createQuestPayloadSchema.parse(request.body)
+      const create_attributes = QuestsHandlers.createQuestPayloadSchema.parse(request.body);
 
       const new_instance = await prisma.quest.create({
         data: {
@@ -103,12 +104,34 @@ class QuestsHandlers {
         },
       });
 
-      response.status(200)
+      // Need to evaluate if any users have completed this quest already
+      // What happens if a user redeems a challenge while this is taking place?
+      const userResult = await prisma.challenge.findMany({
+        where: { challengeId: { in: create_attributes.challenges } },
+        include: {
+          qrCodes: {
+            include: {
+              redeems: {
+                select: { redeemerUser: true },
+              },
+            },
+          },
+        },
+      });
+      const users = userResult
+        .flatMap((challenge) => challenge.qrCodes)
+        .flatMap((qrCode) => qrCode.redeems)
+        .map((redeem) => redeem.redeemerUser);
+      for (const user of users) {
+        await checkForQuestCompletion(user, create_attributes.challenges)
+      }
+
+      response.status(200);
       response.json({
         status: response.statusCode,
         message: "OK",
         data: { ...new_instance },
-      })
+      });
     }
   }
 

@@ -6,9 +6,10 @@ import { z } from "zod"
 import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { NullError } from "@server/common/errors"
 import { UserRole } from "@server/common/model-enums"
-import { QRCodes_category, type QrCode, type User, type Challenge, prisma, Quest_dependency_mode } from "@server/database"
+import { QRCodes_category, type QrCode, type User, type Challenge, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
 import SocketManager from "@server/socket"
+import { checkForQuestCompletion } from "@server/common/check-for-quest-completion"
 
 class QRCodesHandlers {
   static createQRPayloadSchema = z.object({
@@ -160,53 +161,6 @@ class QRCodesHandlers {
     };
   }
 
-  async checkForQuestCompletion(user: User, challenge: Challenge) {
-    const quests = await prisma.quest.findMany({
-      where: {
-        challenges: { some: { challengeId: challenge.challengeId } },
-        usersCompleted: { none: { keycloakUserId: user.keycloakUserId } },
-      },
-      include: {
-        challenges: {
-          include: {
-            qrCodes: {
-              include: {
-                redeems: { where: { redeemerUserId: user.keycloakUserId } },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    for (const quest of quests) {
-      const completedCount = quest.challenges.reduce(
-        (count, challenge) => challenge.qrCodes.reduce((count, code) => count + code.redeems.length, count),
-        0
-      );
-      const completed =
-        quest.dependencyMode === Quest_dependency_mode.AND
-          ? completedCount === quest.challenges.length
-          : completedCount > 0;
-
-      if (completed) {
-        await prisma.quest.update({
-          where: { questId: quest.questId },
-          data: { usersCompleted: { connect: [{ keycloakUserId: user.keycloakUserId }] } },
-        });
-
-        if (quest.points > 0) {
-          await prisma.point.create({
-            data: {
-              value: quest.points,
-              redeemerUserId: user.keycloakUserId,
-            },
-          });
-        }
-      }
-    }
-  }
-
   static redeemQRPayloadSchema = z.object({
     uuid: z.string().uuid(),
   });
@@ -250,7 +204,7 @@ class QRCodesHandlers {
       assert(qr != null);
       await SocketManager.emitQR(qr.qrCodeId);
 
-      if (challenge != null) await this.checkForQuestCompletion(user, challenge);
+      if (challenge != null) await checkForQuestCompletion(user, [challenge.challengeId]);
 
       response.json({
         status: 200,
