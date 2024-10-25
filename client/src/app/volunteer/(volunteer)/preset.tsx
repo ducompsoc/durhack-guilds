@@ -43,16 +43,14 @@ export default function Preset({ displayQR }: { displayQR: (id: number) => void 
 
   return (
     <>
-      <div className="dh-box p-4 mb-6">
-        <div className="flex flex-row items-center">
-          <input
-            type="text"
-            className="dh-input w-full pl-10"
-            placeholder="Search for QRs..."
-            onChange={(e) => filterChallenges(e.target.value)}
-          />
-          <MagnifyingGlassIcon className="w-6 h-6 absolute ml-2" />
-        </div>
+      <div className="dh-box p-4 mb-6 flex flex-row items-center">
+        <input
+          type="text"
+          className="dh-input w-full pl-10"
+          placeholder="Search for QRs..."
+          onChange={(e) => filterChallenges(e.target.value)}
+        />
+        <MagnifyingGlassIcon className="w-6 h-6 absolute ml-2" />
       </div>
       <div className="flex flex-col gap-2">
         {challenges.length === 0 ? (
