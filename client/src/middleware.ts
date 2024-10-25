@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/forbidden", request.nextUrl))
   }
 
-  if (request.nextUrl.pathname.startsWith("/hacker")) {
+  if (request.nextUrl.pathname.startsWith("/hacker") && !request.nextUrl.pathname.startsWith("/hacker/redeem")) {
     const userProfile = await getUserProfile(request);
     // if the user is not logged in, go back to root
     if (!userProfile) return redirectToRoot(request)

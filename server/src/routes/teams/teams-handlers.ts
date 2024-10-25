@@ -13,9 +13,10 @@ import { z } from "zod"
 
 import { getSession } from "@server/auth/session"
 import { decodeTeamJoinCode } from "@server/common/decode-team-join-code"
-import { requireLoggedIn, requireUserIsAdmin } from "@server/common/decorators"
+import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { type Team, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
+import { UserRole } from "@server/common/model-enums"
 
 class TeamsHandlers {
   static join_code_schema = z
@@ -65,7 +66,7 @@ class TeamsHandlers {
     }
   }
 
-  @requireUserIsAdmin()
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   listTeamsAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const result = await prisma.$queryRawTyped(getTeamsWithEverything())
@@ -98,7 +99,7 @@ class TeamsHandlers {
     area_code: z.number(),
   })
 
-  @requireUserIsAdmin()
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   patchTeamAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const { team_id } = response.locals

@@ -164,8 +164,8 @@ class QRCodesHandlers {
     }
   }
 
-  async checkForQuestCompletion(user: User, challenge: Challenge, context: typeof prisma) {
-    const quests = await context.quest.findMany({
+  async checkForQuestCompletion(user: User, challenge: Challenge) {
+    const quests = await prisma.quest.findMany({
       where: {
         challenges: { some: { challengeId: challenge.challengeId } },
         usersCompleted: { none: { keycloakUserId: user.keycloakUserId } }
@@ -194,13 +194,13 @@ class QRCodesHandlers {
           : completedCount > 0;
 
       if (completed) {
-        await context.quest.update({
+        await prisma.quest.update({
           where: { questId: quest.questId },
           data: { usersCompleted: { connect: [{ keycloakUserId: user.keycloakUserId }] } }
         })
 
         if (quest.points > 0) {
-          await context.point.create({ data: {
+          await prisma.point.create({ data: {
             value: quest.points,
             redeemerUserId: user.keycloakUserId
           } })
@@ -221,6 +221,7 @@ class QRCodesHandlers {
       assert(user != null)
 
       let qr = null as QrCode | null
+      let challenge = null as Challenge | null
       await prisma.$transaction(async (context) => {
         qr = await context.qrCode.findUnique({
           where: { payload },
@@ -234,7 +235,7 @@ class QRCodesHandlers {
         let value = qr.pointsValue
         if (qr.challenge != null) {
           value = qr.challenge.points
-          await this.checkForQuestCompletion(user, qr.challenge, context as typeof prisma)
+          challenge = qr.challenge
         }
 
         await context.point.create({
@@ -251,6 +252,8 @@ class QRCodesHandlers {
       assert(qr != null)
       await SocketManager.emitQR(qr.qrCodeId);
 
+      if (challenge != null) await this.checkForQuestCompletion(user, challenge)
+
       response.json({
         status: 200,
         message: "OK",
@@ -265,7 +268,12 @@ class QRCodesHandlers {
       const now = new Date()
       // todo: this needs to be paginated
       const result = await prisma.challenge.findMany({
-        where: { startTime: { lt: now }, expiryTime: { gt: now } },
+        where: { OR: [
+          { startTime: { lt: now }, expiryTime: { gt: now } },
+          { startTime: { lt: now }, expiryTime: null },
+          { startTime: null, expiryTime: { gt: now } },
+          { startTime: null, expiryTime: null },
+        ] },
         orderBy: { expiryTime: "asc" },
       })
 

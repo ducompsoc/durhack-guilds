@@ -9,16 +9,16 @@ import type { Middleware, Request, Response } from "@server/types"
 class AuthHandlers {
   handleLoginSuccess(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
-      if (!request.userProfile) {
-        await response.redirect("/")
-        return
-      }
-
       const session = await getSession(request, response)
       if (session.redirectTo != null) {
         const redirectTo = session.redirectTo
         session.redirectTo = undefined
         await response.redirect(redirectTo)
+        return
+      }
+
+      if (!request.userProfile) {
+        await response.redirect("/")
         return
       }
 

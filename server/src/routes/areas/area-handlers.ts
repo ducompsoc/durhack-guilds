@@ -1,11 +1,12 @@
 import { HttpStatus, ServerError } from "@otterhttp/errors"
 
-import { requireUserIsAdmin } from "@server/common/decorators"
+import { requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
+import { UserRole } from "@server/common/model-enums"
 import { prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
 
 class AreaHandlers {
-  @requireUserIsAdmin()
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   getAreasList(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
       const result = await prisma.megateam.findMany({
