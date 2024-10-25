@@ -80,10 +80,11 @@ export default function Volunteer() {
             name: "Custom",
             content: <Custom displayQR={displayQR} />,
           },
-          {
-            name: "Manage",
-            content: <Manage displayQR={displayQR} />,
-          },
+          // This really isn't useful anymore and a bit broken
+          // {
+          //   name: "Manage",
+          //   content: <Manage displayQR={displayQR} />,
+          // },
         ]
       : []),
   ];
