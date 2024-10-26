@@ -1,6 +1,6 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 export function NewChallenge({ save }: { save: () => void }) {
   const defaultDate = null
@@ -21,7 +21,7 @@ export function NewChallenge({ save }: { save: () => void }) {
     if (!name) return setError("Please set a name!");
     if (!description) return setError("Please set a description!");
     try {
-      await fetchMegateamsApi("/qr_codes/challenges", {
+      await fetchGuildsApi("/qr_codes/challenges", {
         method: "POST",
         body: JSON.stringify({
           name,

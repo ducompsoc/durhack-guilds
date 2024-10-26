@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 
 import { getHackerEmoji, getPositionMedal } from "@/lib/rankEmojis";
 import { ButtonModal } from "@/components/button-modal";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 import { TeamBox } from "./team/team-box";
 import { TeamSetup } from "./team-setup";
@@ -24,23 +24,23 @@ const Scanner = dynamic(() => import("qrcode-scanner-react"), {
 export default function HackerHome() {
   const [scanning, setScanning] = React.useState(false);
   const router = useRouter();
-  const { user, team } = useMegateamsContext();
-  const { data: { megateams } = { megateams: null } } = useSWR("/megateams");
+  const { user, team } = useGuildsContext();
+  const { data: { guilds } = { guilds: null } } = useSWR("/guilds");
   const { data: { teams } = { teams: null } } = useSWR("/teams");
 
   const hasTeam = team !== null;
-  const hasMegateam = team?.megateam_name !== null;
+  const hasGuild = team?.guild_name !== null;
 
-  let megateam_points = 0;
-  let megateam_rank = 0;
+  let guild_points = 0;
+  let guild_rank = 0;
 
-  megateams?.sort((a: any, b: any) => {
+  guilds?.sort((a: any, b: any) => {
     return b.points - a.points;
   });
-  megateams?.forEach((megateam: any, index: number) => {
-    if (megateam.megateam_name === team?.megateam_name) {
-      megateam_points = megateam.points;
-      megateam_rank = index;
+  guilds?.forEach((guild: any, index: number) => {
+    if (guild.guild_name === team?.guild_name) {
+      guild_points = guild.points;
+      guild_rank = index;
     }
   });
 
@@ -78,26 +78,26 @@ export default function HackerHome() {
           <p>Hello {user?.preferred_name},</p>
           <div className="flex mt-4">
             <TeamBox />
-            {hasMegateam && (
+            {hasGuild && (
               <div className="dh-box p-2 text-center grow basis-0 ml-4 flex flex-col">
                 <h2 className="font-semibold mb-2">Guild</h2>
                 <div className="flex flex-col md:flex-row items-center justify-evenly md:justify-center md:gap-x-4 grow">
                   <object
-                    data={`/${team?.megateam_name}/icon.svg`}
+                    data={`/${team?.guild_name}/icon.svg`}
                     type="image/svg+xml"
                     className="w-12"
                   >
                     <img
-                      src={`/${team?.megateam_name}/icon.png`}
-                      alt={`${team?.megateam_name} Logo`}
+                      src={`/${team?.guild_name}/icon.png`}
+                      alt={`${team?.guild_name} Logo`}
                     />
                   </object>
-                  <p className="font-heading text-lg">{team?.megateam_name}</p>
+                  <p className="font-heading text-lg">{team?.guild_name}</p>
                 </div>
               </div>
             )}
           </div>
-          {hasMegateam ? (
+          {hasGuild ? (
             <>
               <div className="dh-box p-2 text-center flex mt-4">
                 <div className="grow">
@@ -117,7 +117,7 @@ export default function HackerHome() {
                 <div className="grow">
                   <h2 className="font-semibold mb-2">Guild Points</h2>
                   <p>
-                    {megateam_points} {getPositionMedal(megateam_rank)}
+                    {guild_points} {getPositionMedal(guild_rank)}
                   </p>
                 </div>
               </div>

@@ -9,14 +9,14 @@ class AreaHandlers {
   @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   getAreasList(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
-      const result = await prisma.megateam.findMany({
+      const result = await prisma.guild.findMany({
         include: { areas: true },
       })
 
       response.json({
         status: 200,
         message: "OK",
-        megateams: result,
+        guilds: result,
       })
     }
   }

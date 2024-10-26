@@ -31,7 +31,7 @@ export const {
   discord: discordConfig,
   keycloak: keycloakConfig,
   origin,
-  megateams: megateamsConfig,
+  guilds: guildsConfig,
 } = config
 
 export { config }

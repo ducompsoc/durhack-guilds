@@ -14,7 +14,7 @@ import useSWR from "swr";
 import { Dialog } from "@headlessui/react";
 
 import { ButtonModal } from "@/components/button-modal";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 import { getQRState, qrClasses, capitalizeFirstLetter } from "./qr-display-helpers"  
 
 export default function Manage({
@@ -34,7 +34,7 @@ export default function Manage({
     try {
       let body: Record<string, boolean> = {};
       body[field] = value;
-      await fetchMegateamsApi("/qr_codes/" + encodeURIComponent(id), {
+      await fetchGuildsApi("/qr_codes/" + encodeURIComponent(id), {
         method: "PATCH",
         body: JSON.stringify(body),
         headers: {

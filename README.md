@@ -16,7 +16,7 @@ DurHack's 'Guilds' platform, built in-house by the DurHack team (2023-present).
 ## Nginx Configuration
 ```
 server {
-    server_name megateams.durhack.com www.megateams.durhack.com;
+    server_name guilds.durhack.com www.guilds.durhack.com;
     
     location /api {
         proxy_pass http://127.0.0.1:3101$request_uri;
@@ -58,26 +58,3 @@ server {
     listen 80;
 }
 ```
-
-## mysql server
-
-Make sure you are running a [mysql server](https://dev.mysql.com/doc/refman/8.1/en/installing.html) 
-on your machine before trying to run the project otherwise you will get connection refused errors etc.
-as the javascript can't find a server to connect to on your localhost 🥲.
-
-If your computer's `hosts` file contains `::1 localhost` (IPv6 local loopback) then you will need to use 
-`127.0.0.1` as the database host, as the IPv6 spec clashes with the port spec (`::1:3306` is recognised as an IPv6 address,
-not an address followed by a port).
-
-This server should also have an appropriate user with permissions to manage the database, e.g.
-```sql
-CREATE USER 'durhack'@'localhost' IDENTIFIED BY 'durhack';
-GRANT ALL PRIVILEGES ON durhack2023megateams.* TO 'durhack'@'localhost'
-```
-_This follows the naming used in the `.env.local` file given above_
-
-
-## environment options
-- `MEGATEAMS_SKIP_EMAIL_VERIFICATION`: set to `true` to allow users to set their password without verifying email
-- `MEGATEAMS_NO_MITIGATE_CSRF`: set to `true` to allow `POST/PATCH/DELETE` (etc.) requests 
-_without_ a CSRF hash cookie and token header.

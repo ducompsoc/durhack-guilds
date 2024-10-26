@@ -62,7 +62,7 @@ export const configSchema = z.object({
   cookieSigning: cookieSigningOptionsSchema,
   jsonwebtoken: tokenVaultOptionsSchema,
   session: sessionOptionsSchema,
-  megateams: z.object({
+  guilds: z.object({
     maxTeamMembers: z.number().positive(),
   }),
   discord: discordOptionsSchema,

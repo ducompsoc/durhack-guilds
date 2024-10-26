@@ -74,7 +74,7 @@ class UsersHandlers {
               team: {
                 include: {
                   area: {
-                    include: { megateam: true },
+                    include: { guild: true },
                   },
                 },
               },
@@ -93,7 +93,7 @@ class UsersHandlers {
           points: prisma.point.sumPoints(databaseUser?.points ?? []),
           team_name: databaseUser?.team?.teamName ?? null,
           team_id: databaseUser?.team?.teamId ?? null,
-          megateam_name: databaseUser?.team?.area?.megateam?.megateamName ?? null,
+          guild_name: databaseUser?.team?.area?.guild?.guildName ?? null,
         }
       })
 

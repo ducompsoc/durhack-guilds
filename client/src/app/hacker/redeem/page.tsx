@@ -9,16 +9,16 @@ import Link from "next/link";
 import { redirect, useSearchParams } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 import { isHacker } from "@/lib/is-role";
 import { abortForRerender } from "@/lib/symbols";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 export default function RedeemPage() {
   const [qrPoints, setQrPoints] = useState<number | null>(null);
   const [qrChecked, setQrChecked] = useState(false);
   const searchParams = useSearchParams();
-  const { user, userIsLoading } = useMegateamsContext();
+  const { user, userIsLoading } = useGuildsContext();
 
   function makeSearchParams(params: Record<string, string>) {
     return new URLSearchParams(params).toString();
@@ -29,7 +29,7 @@ export default function RedeemPage() {
       const uuid = searchParams.get("qr_id");
       if (uuid && uuid !== "invalid") {
         try {
-          const result = await fetchMegateamsApi("/qr_codes/redeem", {
+          const result = await fetchGuildsApi("/qr_codes/redeem", {
             method: "POST",
             body: JSON.stringify({ uuid }),
             headers: { "Content-Type": "application/json" },

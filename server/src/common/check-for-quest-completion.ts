@@ -20,10 +20,11 @@ export async function checkForQuestCompletion(user: User, challengeIds: number[]
   });
 
   for (const quest of quests) {
-    const completedCount = quest.challenges.reduce(
-      (count, challenge) => challenge.qrCodes.reduce((count, code) => count + code.redeems.length, count),
-      0
-    );
+    let completedCount = 0;
+    for (const challenge of quest.challenges) {
+      const challengeCompletionCount = challenge.qrCodes.reduce((count, code) => count + code.redeems.length, 0)
+      if (challengeCompletionCount > 0) completedCount += 1
+    }
     const completed =
       quest.dependencyMode === Quest_dependency_mode.AND
         ? completedCount === quest.challenges.length

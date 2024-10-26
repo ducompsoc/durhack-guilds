@@ -2,7 +2,7 @@ import { useState } from "react";
 import Select from "react-select";
 import useSWR from "swr";
 
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 export function NewQuest({ save }: { save: () => void }) {
   const dependencyModes = ["AND", "OR"];
@@ -26,7 +26,7 @@ export function NewQuest({ save }: { save: () => void }) {
     if (challenges.length === 0) return setError("Please include at least one challenge!");
     setDisabled(true);
     try {
-      await fetchMegateamsApi("/quests", {
+      await fetchGuildsApi("/quests", {
         method: "POST",
         body: JSON.stringify({
           name,

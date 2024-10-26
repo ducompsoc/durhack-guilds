@@ -54,7 +54,7 @@ class UserHandlers {
           team: {
             include: {
               members: { include: { points: true } },
-              area: { include: { megateam: true } },
+              area: { include: { guild: true } },
             },
           },
         },
@@ -83,7 +83,7 @@ class UserHandlers {
               points: prisma.point.sumPoints(member.points),
             }
           }) || [],
-        megateam_name: team.area?.megateam.megateamName || null,
+        guild_name: team.area?.guild.guildName || null,
         join_code: team.joinCodeString,
       }
 

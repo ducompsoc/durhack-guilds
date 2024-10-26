@@ -7,7 +7,7 @@ import useSWR from "swr";
 import ReactPaginate from "react-paginate";
 
 import { ButtonModal } from "@/components/button-modal";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export function TeamsPage() {
@@ -15,8 +15,8 @@ export function TeamsPage() {
     teams: any[];
   }>("/teams");
   const [teams, setTeams, resetForm] = useFormState(teamsData.teams);
-  const { data: { megateams } = { megateams: [] } } = useSWR<{
-    megateams: any[];
+  const { data: { guilds } = { guilds: [] } } = useSWR<{
+    guilds: any[];
   }>("/areas");
   const [message, setMessage] = React.useState("");
   const [messageOpen, setMessageOpen] = React.useState(false);
@@ -56,9 +56,9 @@ export function TeamsPage() {
     setPageNumber(0);
   }
 
-  function changeMegateam(team: any, name: string) {
+  function changeGuild(team: any, name: string) {
     const newTeams = [...teams];
-    team.area = { megateam: { megateam_name: name } };
+    team.area = { guild: { guild_name: name } };
     setTeams(newTeams);
   }
 
@@ -68,23 +68,23 @@ export function TeamsPage() {
     setTeams(newTeams);
   }
 
-  function getMegateam(megateam_name: string) {
-    const filteredMegateams = megateams.filter(
-      ({ megateamName }) => megateamName === megateam_name
+  function getGuild(guild_name: string) {
+    const filteredGuilds = guilds.filter(
+      ({ guildName }) => guildName === guild_name
     );
-    return filteredMegateams.length ? filteredMegateams[0] : null;
+    return filteredGuilds.length ? filteredGuilds[0] : null;
   }
 
-  function getArea(megateam: any, area_id: number) {
+  function getArea(guild: any, area_id: number) {
     const filteredAreas =
-      megateam?.areas?.filter((area: any) => area.areaId === area_id) ?? [];
+      guild?.areas?.filter((area: any) => area.areaId === area_id) ?? [];
     return filteredAreas.length ? filteredAreas[0] : null;
   }
 
   async function saveTeam(team: any) {
     if (Number.isInteger(team?.area?.area_id)) {
       try {
-        await fetchMegateamsApi("/teams/" + team.team_id, {
+        await fetchGuildsApi("/teams/" + team.team_id, {
           method: "PATCH",
           body: JSON.stringify({ area_code: team.area.area_id }),
           headers: { "Content-Type": "application/json" },
@@ -132,8 +132,8 @@ export function TeamsPage() {
           className="dh-paginate my-6"
         />
         {currentItems.map((team) => {
-          const megateam = getMegateam(team.area?.megateam?.megateam_name);
-          const area = getArea(megateam, team.area?.area_id);
+          const guild = getGuild(team.area?.guild?.guild_name);
+          const area = getArea(guild, team.area?.area_id);
           return (
             <div className="dh-box p-4 mb-4" key={team.join_code}>
               <p className="mb-1">{team.name}</p>
@@ -142,20 +142,20 @@ export function TeamsPage() {
               </p>
               <select
                 className="by-2 dh-input w-full"
-                value={megateam?.megateamName ?? ""}
-                onChange={(e) => changeMegateam(team, e.target.value)}
+                value={guild?.guildName ?? ""}
+                onChange={(e) => changeGuild(team, e.target.value)}
               >
                 <option disabled value="">
                   Assign a guild!
                 </option>
-                {megateams.map(({ megateamName }) => (
-                  <option key={megateamName} value={megateamName}>
-                    {megateamName}
+                {guilds.map(({ guildName }) => (
+                  <option key={guildName} value={guildName}>
+                    {guildName}
                   </option>
                 ))}
               </select>
               <Select
-                options={megateam?.areas ?? []}
+                options={guild?.areas ?? []}
                 className="mt-2 dh-select"
                 classNamePrefix="dh-select"
                 menuPortalTarget={document.body}

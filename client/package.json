@@ -1,6 +1,6 @@
 {
-  "name": "durhack-megateams-server",
-  "description": "Client app for the DurHack Megateams project",
+  "name": "durhack-guilds-server",
+  "description": "Client app for the DurHack Guilds project",
   "version": "0.1.0",
   "private": true,
   "author": {
@@ -15,7 +15,7 @@
     "Luca Huelle <lucahuelle@gmail.com>"
   ],
   "repository": {
-    "url": "https://github.com/ducompsoc/durhack-megateams"
+    "url": "https://github.com/ducompsoc/durhack-guilds"
   },
   "scripts": {
     "dev": "next dev -p 3100",
@@ -43,7 +43,6 @@
     "qrcode-scanner-react": "^0.2.3",
     "react": "18.2.0",
     "react-chartjs-2": "^5.2.0",
-    "react-component-export-image": "^1.0.6",
     "react-dom": "18.2.0",
     "react-hooks-use-form-state": "^0.0.1",
     "react-paginate": "^8.2.0",

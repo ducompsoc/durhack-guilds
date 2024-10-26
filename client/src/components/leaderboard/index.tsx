@@ -5,14 +5,14 @@ import useSWR from "swr";
 
 import { getPositionMedal } from "@/lib/rankEmojis";
 import TeamName from "@/components/team-name";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 import MegaChart from "./mega-chart";
 
 export default function Leaderboard() {
   const { data: { teams } = { teams: null } } = useSWR(
     "/teams",
-    fetchMegateamsApi,
+    fetchGuildsApi,
     { refreshInterval: 1000 }
   );
 

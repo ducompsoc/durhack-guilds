@@ -50,7 +50,7 @@ class AuthHandlers {
         scope: request.userProfile?.groups ?? [],
         lifetime: 1800,
         claims: {
-          client_id: "megateams-socket",
+          client_id: "guilds-socket",
         },
       })
       response.status(200)

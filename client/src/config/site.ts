@@ -1,4 +1,4 @@
-import { PHASE_DEVELOPMENT_SERVER } from "next/constants"
+import { isDevelopment } from "@/lib/environment"
 
 export const siteConfig = {
   name: "DurHack Guilds",
@@ -7,10 +7,12 @@ export const siteConfig = {
   openGraphImage: "/opengraph-image.png",
   url: "https://guilds.durhack.com",
   themeColor: "#b3824b",
+  sessionCookieName: "__Host-durhack-guilds-session",
 }
 
-if (PHASE_DEVELOPMENT_SERVER) {
+if (isDevelopment) {
   Object.assign(siteConfig, {
     url: "http://guilds.durhack-dev.com",
+    sessionCookieName: "durhack-guilds-session",
   })
 }

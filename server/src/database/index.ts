@@ -4,10 +4,10 @@ import { getChallengePointsByUser } from "@prisma/client/sql"
 import assert from "node:assert/strict"
 
 import { decodeTeamJoinCode } from "@server/common/decode-team-join-code"
-import { megateamsConfig, origin } from "@server/config"
+import { guildsConfig, origin } from "@server/config"
 
 export type Area = Prisma.AreaGetPayload<{ select: undefined }>
-export type Megateam = Prisma.MegateamGetPayload<{ select: undefined }>
+export type Guild = Prisma.GuildGetPayload<{ select: undefined }>
 export type Point = Prisma.PointGetPayload<{ select: undefined }>
 export type QrCode = Prisma.QrCodeGetPayload<{ select: undefined; include: { challenge: true } }> & {
   canBeRedeemedByUser(user: Pick<User, "keycloakUserId">): Promise<boolean>
@@ -45,7 +45,7 @@ export const prisma = basePrisma.$extends({
     team: {
       async isJoinableTeam({ where }: { where: { teamId: Team["teamId"] } }) {
         const team_members = await basePrisma.user.count({ where: { team: { is: where } } })
-        return team_members < megateamsConfig.maxTeamMembers
+        return team_members < guildsConfig.maxTeamMembers
       },
     },
   },
@@ -63,11 +63,13 @@ export const prisma = basePrisma.$extends({
         needs: {
           qrCodeId: true,
           state: true,
-          challengeId: true
+          challengeId: true,
+          isBeingDisplayed: true
         },
         compute(qrCode) {
           return async (): Promise<boolean> => {
             if (!qrCode.state) return false
+            if (!qrCode.isBeingDisplayed) return false
 
             if (qrCode.challengeId != null) {
               const challenge = await prisma.challenge.findUnique({
@@ -88,7 +90,8 @@ export const prisma = basePrisma.$extends({
           qrCodeId: true,
           state: true,
           challengeId: true,
-          claimLimit: true
+          claimLimit: true,
+          isBeingDisplayed: true
         },
         compute(qrCode: QrCode) {
           return async (user: Pick<User, "keycloakUserId">): Promise<boolean> => {

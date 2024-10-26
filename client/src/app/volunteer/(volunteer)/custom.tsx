@@ -1,7 +1,7 @@
 import { ClockIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 export default function Custom({
   displayQR,
@@ -20,7 +20,7 @@ export default function Custom({
   async function submitForm() {
     if (!name) return setError("Please set a name!");
     try {
-      const { data: qr } = await fetchMegateamsApi("/qr_codes", {
+      const { data: qr } = await fetchGuildsApi("/qr_codes", {
         method: "POST",
         body: JSON.stringify({
           name,

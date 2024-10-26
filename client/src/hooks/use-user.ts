@@ -1,6 +1,6 @@
 import useSWR from "swr";
 
-import { makeMegateamsApiRequest } from "@/lib/api";
+import { makeGuildsApiRequest } from "@/lib/api";
 
 export type User = {
   id: string
@@ -11,7 +11,7 @@ export type User = {
 }
 
 async function userFetcher(url: string): Promise<User | null> {
-  const request = await makeMegateamsApiRequest(url);
+  const request = await makeGuildsApiRequest(url);
   const response = await fetch(request);
 
   if (response.status === 401) return null;

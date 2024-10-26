@@ -6,10 +6,10 @@ import dateFormat from "dateformat";
 import { useFormState } from "react-hooks-use-form-state";
 
 import { getQRState, qrClasses, capitalizeFirstLetter } from "./qr-display-helpers";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 export default function Preset({ displayQR }: { displayQR: (id: number) => void }) {
-  const { data: challengeData = { challenges: [] }, isLoading } = useSWR<{ challenges: any[] }>("/qr_codes/challenges");
+  const { data: challengeData = { challenges: [] } } = useSWR<{ challenges: any[] }>("/qr_codes/challenges");
   const [error, setError] = useState<string | null>(null);
   const [challenges, setChallenges, resetForm] = useFormState(challengeData.challenges);
 
@@ -28,7 +28,7 @@ export default function Preset({ displayQR }: { displayQR: (id: number) => void 
 
   async function generateQR(id: number) {
     try {
-      const { data: qr } = await fetchMegateamsApi(
+      const { data: qr } = await fetchGuildsApi(
         "/qr_codes/challenges/" + encodeURIComponent(id),
         { method: "POST" }
       );
@@ -38,8 +38,6 @@ export default function Preset({ displayQR }: { displayQR: (id: number) => void 
       setError("Failed to generate QR!");
     }
   }
-
-  if (isLoading) return <></>;
 
   return (
     <>

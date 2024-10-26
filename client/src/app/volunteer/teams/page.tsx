@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 import { isVolunteer } from "@/lib/is-role";
 
 const TeamsPage = dynamic(
@@ -12,7 +12,7 @@ const TeamsPage = dynamic(
 );
 
 export default function Teams() {
-  const { user, userIsLoading } = useMegateamsContext();
+  const { user, userIsLoading } = useGuildsContext();
   if (userIsLoading) return <></>;
   if (user == null || !isVolunteer(user)) return redirect("/");
 

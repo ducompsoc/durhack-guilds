@@ -1,13 +1,14 @@
+"use client";
+
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { mutate } from "swr";
 
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 import { abortForRerender } from "@/lib/symbols";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 export function TeamSetup() {
-  const { user, mutateTeam } = useMegateamsContext();
+  const { user, mutateTeam } = useGuildsContext();
   const [name, setName] = useState<string | null>(null);
   const [createError, setCreateError] = useState("");
   const [joinError, setJoinError] = useState("");
@@ -17,7 +18,7 @@ export function TeamSetup() {
     const params = new URLSearchParams();
     if (refresh) params.set("refresh", "yes");
     try {
-      const { name } = await fetchMegateamsApi(`/teams/generate-name?${params}`, { signal });
+      const { name } = await fetchGuildsApi(`/teams/generate-name?${params}`, { signal });
       setName(name);
       setCreateError("");
     } catch (error) {
@@ -28,7 +29,7 @@ export function TeamSetup() {
 
   async function joinTeam() {
     try {
-      const response = await fetchMegateamsApi("/user/team", {
+      await fetchGuildsApi("/user/team", {
         method: "POST",
         body: JSON.stringify({ join_code: joinCode }),
         headers: { "Content-Type": "application/json" },
@@ -42,7 +43,7 @@ export function TeamSetup() {
 
   async function createTeam() {
     try {
-      await fetchMegateamsApi("/teams", { method: "POST" });
+      await fetchGuildsApi("/teams", { method: "POST" });
       setCreateError("");
       await mutateTeam();
     } catch {

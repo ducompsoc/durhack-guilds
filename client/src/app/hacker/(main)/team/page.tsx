@@ -5,22 +5,22 @@ import { ExclamationTriangleIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Dialog } from "@headlessui/react";
 
 import { ButtonModal } from "@/components/button-modal";
-import { fetchMegateamsApi } from "@/lib/api";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { fetchGuildsApi } from "@/lib/api";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 import { TeamBox } from "./team-box";
 
 export default function Team() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
-  const { team, mutateTeam } = useMegateamsContext()
+  const { team, mutateTeam } = useGuildsContext()
 
   const members: { preferredNames: string; points: number }[] = team?.members ?? [];
   members.sort((a, b) => b.points - a.points);
 
   async function leaveTeam() {
     try {
-      await fetchMegateamsApi("/user/team", { method: "DELETE" });
+      await fetchGuildsApi("/user/team", { method: "DELETE" });
       setError("");
       await mutateTeam(null);
     } catch {

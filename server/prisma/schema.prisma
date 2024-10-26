@@ -10,24 +10,24 @@ datasource db {
 
 model Area {
   areaId       Int      @id @default(autoincrement()) @map("area_id")
-  megateamId   Int      @map("megateam_id")
+  guildId      Int      @map("guild_id")
   areaName     String   @map("area_name") @db.VarChar(255)
   areaLocation String   @map("area_location") @db.VarChar(255)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-  megateam     Megateam @relation(fields: [megateamId], references: [megateamId], onDelete: NoAction)
+  guild        Guild    @relation(fields: [guildId], references: [guildId], onDelete: NoAction)
   teams        Team[]
 
-  @@index([megateamId])
+  @@index([guildId])
 }
 
-model Megateam {
-  megateamId          Int      @id @default(autoincrement()) @map("megateam_id")
-  megateamName        String   @map("megateam_name") @db.VarChar(255)
-  megateamDescription String?  @map("megateam_description") @db.VarChar(255)
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
-  areas               Area[]
+model Guild {
+  guildId          Int      @id @default(autoincrement()) @map("guild_id")
+  guildName        String   @map("guild_name") @db.VarChar(255)
+  guildDescription String?  @map("guild_description") @db.VarChar(255)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  areas            Area[]
 }
 
 model Point {
@@ -45,20 +45,21 @@ model Point {
 }
 
 model QrCode {
-  qrCodeId      Int              @id @default(autoincrement()) @map("qr_code_id")
-  challengeId   Int?             @map("challenge_id")
-  name          String           @db.VarChar(255)
-  category      QRCodes_category @default(workshop)
-  payload       String           @unique @db.Uuid
-  pointsValue   Int              @map("points_value")
-  state         Boolean
-  creatorUserId String           @map("creator_id") @db.Uuid
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-  redeems       Point[]
-  creator       User             @relation(fields: [creatorUserId], references: [keycloakUserId], onDelete: NoAction)
-  challenge     Challenge?       @relation(fields: [challengeId], references: [challengeId], onDelete: NoAction)
-  claimLimit    Boolean          @map("claim_limit")
+  qrCodeId         Int              @id @default(autoincrement()) @map("qr_code_id")
+  challengeId      Int?             @map("challenge_id")
+  name             String           @db.VarChar(255)
+  category         QRCodes_category @default(workshop)
+  payload          String           @unique @db.Uuid
+  pointsValue      Int              @map("points_value")
+  state            Boolean
+  creatorUserId    String           @map("creator_id") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  redeems          Point[]
+  creator          User             @relation(fields: [creatorUserId], references: [keycloakUserId], onDelete: NoAction)
+  challenge        Challenge?       @relation(fields: [challengeId], references: [challengeId], onDelete: NoAction)
+  claimLimit       Boolean          @map("claim_limit")
+  isBeingDisplayed Boolean          @default(false) @map("is_being_displayed")
 
   @@index([creatorUserId])
   @@index([challengeId])

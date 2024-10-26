@@ -12,14 +12,14 @@ import { redirect } from "next/navigation";
 
 import { TabbedPage } from "@/components/tabbed-page";
 import { isAdmin as getIsAdmin, isVolunteer as getIsVolunteer } from "@/lib/is-role";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 export default function VolunteerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, userIsLoading } = useMegateamsContext();
+  const { user, userIsLoading } = useGuildsContext();
   if (userIsLoading) return <></>;
   if (user == null) return redirect("/")
 

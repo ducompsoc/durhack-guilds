@@ -14,7 +14,7 @@ import resolveConfig from "tailwindcss/resolveConfig";
 import tailwindConfig from "tailwindcss/defaultConfig";
 import useSWR from "swr";
 
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 ChartJS.register(
   CategoryScale,
@@ -25,14 +25,14 @@ ChartJS.register(
 );
 
 export default function MegaChart() {
-  const { data: { megateams } = { megateams: null } } = useSWR(
-    "/megateams",
-    fetchMegateamsApi,
+  const { data: { guilds } = { guilds: null } } = useSWR(
+    "/guilds",
+    fetchGuildsApi,
     { refreshInterval: 1000 }
   );
 
-  megateams?.sort((a: any, b: any) => {
-    return a.megateam_name.localeCompare(b.megateam_name);
+  guilds?.sort((a: any, b: any) => {
+    return a.guild_name.localeCompare(b.guild_name);
   });
 
   const isDark = useMediaQuery({
@@ -43,20 +43,20 @@ export default function MegaChart() {
 
   let largestPoints = 0;
 
-  megateams?.forEach((megateam: any) => {
-    megateam.image = new Image();
-    megateam.image.src = `/${megateam.megateam_name}/icon.png`;
-    if (megateam.points > largestPoints) {
-      largestPoints = megateam.points;
+  guilds?.forEach((guild: any) => {
+    guild.image = new Image();
+    guild.image.src = `/${guild.guild_name}/icon.png`;
+    if (guild.points > largestPoints) {
+      largestPoints = guild.points;
     }
   });
 
   const dataset = {
-    labels: megateams?.map((team: any) => team.megateam_name.split(" ")[0]),
+    labels: guilds?.map((team: any) => team.guild_name.split(" ")[0]),
     datasets: [
       {
         label: "Points",
-        data: megateams?.map((team: any) => team.points),
+        data: guilds?.map((team: any) => team.points),
         ...(isDark
           ? {
               // @ts-ignore
@@ -94,7 +94,7 @@ export default function MegaChart() {
     plugins: {
       datalabels,
       annotation: {
-        annotations: megateams?.map((team: any, i: number) => {
+        annotations: guilds?.map((team: any, i: number) => {
           const options: AnnotationOptions = {
             type: "box",
             yMin: Math.max(largestPoints * 0.6, team.points * 0.75),

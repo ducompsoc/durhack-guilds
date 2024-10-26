@@ -9,7 +9,7 @@ import tailwindConfig from "tailwindcss/defaultConfig";
 
 import { socketManager } from "@/lib/socket";
 import { isAdmin } from "@/lib/is-role";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 import Preset from "./preset";
 import Custom from "./custom";
@@ -31,7 +31,7 @@ export default function Volunteer() {
   });
   const { theme } = resolveConfig(tailwindConfig);
 
-  const { user } = useMegateamsContext();
+  const { user } = useGuildsContext();
   const userIsAdmin = user != null && isAdmin(user);
 
   function getClasses(name: string) {

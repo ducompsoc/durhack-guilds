@@ -18,7 +18,7 @@ import type { Request, Response } from "@server/types"
 import { areasApp } from "./areas"
 import { authApp } from "./auth"
 import { discordApp } from "./discord"
-import { megateamsApp } from "./megateams"
+import { guildsApp } from "./guilds"
 import { pointsApp } from "./points"
 import { qrCodesApp } from "./qr-codes"
 import { teamsApp } from "./teams"
@@ -120,7 +120,7 @@ apiApp
 
 apiApp.use("/auth", authApp)
 apiApp.use("/areas", areasApp)
-apiApp.use("/megateams", megateamsApp)
+apiApp.use("/guilds", guildsApp)
 apiApp.use("/points", pointsApp)
 apiApp.use("/qr_codes", qrCodesApp)
 apiApp.use("/teams", teamsApp)

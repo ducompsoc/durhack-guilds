@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
 import { isAdmin } from "@/lib/is-role";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 const Admin = dynamic(
   () => import("./admin-page").then(mod => mod.AdminPage),
@@ -12,7 +12,7 @@ const Admin = dynamic(
 );
 
 export default function AdminPage() {
-  const { user, userIsLoading } = useMegateamsContext();
+  const { user, userIsLoading } = useGuildsContext();
 
   if (userIsLoading) return <></>;
   if (user == null) return redirect("/")

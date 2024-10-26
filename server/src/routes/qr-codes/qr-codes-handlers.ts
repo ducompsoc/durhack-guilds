@@ -218,7 +218,8 @@ class QRCodesHandlers {
     noFilter: z
       .string()
       .refine((value) => value === "true" || value === "false")
-      .transform((value) => value === "true"),
+      .transform((value) => value === "true")
+      .optional(),
   });
 
   @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)

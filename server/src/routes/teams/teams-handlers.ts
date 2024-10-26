@@ -80,9 +80,9 @@ class TeamsHandlers {
         area: {
           area_id: team.areaId,
           area_name: team.areaName,
-          megateam: {
-            megateam_id: team.megateamId,
-            megateam_name: team.megateamName,
+          guild: {
+            guild_id: team.guildId,
+            guild_name: team.guildName,
           },
         },
       }))

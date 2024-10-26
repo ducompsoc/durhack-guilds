@@ -7,8 +7,8 @@ import { Dialog } from "@headlessui/react";
 import * as React from "react";
 import { SWRConfig } from "swr";
 
-import { fetchMegateamsApi } from "@/lib/api";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { fetchGuildsApi } from "@/lib/api";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 import { ButtonModal } from "./button-modal";
 
@@ -34,15 +34,15 @@ export function TabbedPage({
 }) {
   const path = usePathname();
   const [open, setOpen] = React.useState(false);
-  const { mutateUser } = useMegateamsContext();
+  const { mutateUser } = useGuildsContext();
 
   async function signOut() {
-    await fetchMegateamsApi("/auth/logout", { method: "POST" });
+    await fetchGuildsApi("/auth/logout", { method: "POST" });
     await mutateUser(null);
   }
 
   return (
-    <SWRConfig value={{ fetcher: fetchMegateamsApi }}>
+    <SWRConfig value={{ fetcher: fetchGuildsApi }}>
       <div className="h-full flex flex-col text-black dark:text-neutral-200">
         <div className="flex flex-row py-4 px-6 items-center justify-evenly">
           <img src="/logo.svg" alt="DurHack Logo" className="w-16 h-16" />

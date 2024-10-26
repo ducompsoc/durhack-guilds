@@ -8,7 +8,7 @@ import Select from "react-select";
 import useSWR from "swr";
 
 import { ButtonModal } from "@/components/button-modal";
-import { fetchMegateamsApi } from "@/lib/api";
+import { fetchGuildsApi } from "@/lib/api";
 
 export function AdminPage() {
   const itemsPerPage = 10;
@@ -63,7 +63,7 @@ export function AdminPage() {
     )?.value;
     if (points && !Number.isNaN(points)) {
       try {
-        await fetchMegateamsApi("/points", {
+        await fetchGuildsApi("/points", {
           method: "POST",
           body: JSON.stringify({ value: parseInt(points), redeemerUserId: id }),
           headers: { "Content-Type": "application/json" },
@@ -82,7 +82,7 @@ export function AdminPage() {
 
   async function changeTeam(id: number, team_id: number) {
     try {
-      await fetchMegateamsApi("/users/" + id, {
+      await fetchGuildsApi("/users/" + id, {
         method: "PATCH",
         body: JSON.stringify({ team_id }),
         headers: { "Content-Type": "application/json" },
@@ -132,7 +132,7 @@ export function AdminPage() {
               preferred_name,
               email,
               points,
-              megateam_name,
+              guild_name,
               team_name,
               id,
               team_id,
@@ -144,7 +144,7 @@ export function AdminPage() {
                 {preferred_name} - {email}
               </p>
               <p className="mb-2">
-                {points} points | {megateam_name || "No guild assigned!"}
+                {points} points | {guild_name || "No guild assigned!"}
               </p>
               <Select
                 className="mb-4 dh-select"

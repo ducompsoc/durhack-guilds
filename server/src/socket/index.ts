@@ -23,6 +23,7 @@ class SocketConnection {
   declare userRoles?: UserRole[]
   declare manager: SocketManager
   declare socket: Socket
+  declare qrCodeId: number
 
   constructor(manager: SocketManager, socket: Socket) {
     this.manager = manager
@@ -34,6 +35,7 @@ class SocketConnection {
     this.socket.on("authenticate", this.onAuthenticate.bind(this))
     this.socket.on("disconnect", this.onDisconnect.bind(this))
     this.socket.on("qr", this.onQR.bind(this))
+    this.socket.on("end_listen", this.onEndListen.bind(this))
   }
 
   private isElevatedRole() {
@@ -44,7 +46,9 @@ class SocketConnection {
 
   private async onQR(id: number) {
     if (!this.isElevatedRole()) return
+    await prisma.qrCode.update({ where: { qrCodeId: id }, data: { isBeingDisplayed: true } })
     this.socket.join(`qr:${id}`)
+    this.qrCodeId = id
     await emitQR(id, this.socket)
   }
 
@@ -75,8 +79,13 @@ class SocketConnection {
     cb(true)
   }
 
-  private onDisconnect() {
+  private async onDisconnect() {
+    if (this.qrCodeId != null) await prisma.qrCode.update({ where: { qrCodeId: this.qrCodeId }, data: { isBeingDisplayed: false } })
     this.manager.connections.delete(this)
+  }
+
+  private async onEndListen() {
+    if (this.qrCodeId != null) await prisma.qrCode.update({ where: { qrCodeId: this.qrCodeId }, data: { isBeingDisplayed: false } })
   }
 }
 

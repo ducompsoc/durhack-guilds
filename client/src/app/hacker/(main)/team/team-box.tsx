@@ -4,11 +4,11 @@ import { ShareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 import TeamName from "@/components/team-name";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 export function TeamBox({ grow = true }: { grow?: boolean }) {
   const [showTeamCode, setShowTeamCode] = useState(false);
-  const { team } = useMegateamsContext()
+  const { team } = useGuildsContext()
 
   function toggleTeamCode() {
     setShowTeamCode(!showTeamCode);

@@ -7,13 +7,13 @@ import { useState } from "react";
 import { useFormState } from "react-hooks-use-form-state";
 
 import { isAdmin } from "@/lib/is-role";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 import { ButtonModal } from "@/components/button-modal";
 import { NewQuest } from "./new-quest";
 import { NewChallenge } from "./new-challenge";
 
 export default function Quests() {
-  const { user, userIsLoading } = useMegateamsContext();
+  const { user, userIsLoading } = useGuildsContext();
   const { data: questData = { quests: [] }, isLoading, mutate: mutateQuests } = useSWR<{ quests: any[] }>("/quests");
   const [error, setError] = useState<string | null>(null);
   const [quests, setQuests, resetForm] = useFormState(questData.quests);

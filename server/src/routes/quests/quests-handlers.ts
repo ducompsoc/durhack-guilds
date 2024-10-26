@@ -105,7 +105,6 @@ class QuestsHandlers {
       });
 
       // Need to evaluate if any users have completed this quest already
-      // What happens if a user redeems a challenge while this is taking place?
       const userResult = await prisma.challenge.findMany({
         where: { challengeId: { in: create_attributes.challenges } },
         include: {

@@ -8,14 +8,14 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { TabbedPage } from "@/components/tabbed-page";
-import { useMegateamsContext } from "@/hooks/use-megateams-context";
+import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 export default function HackerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { team, userIsLoading, teamIsLoading } = useMegateamsContext();
+  const { team, userIsLoading, teamIsLoading } = useGuildsContext();
 
   if (userIsLoading || teamIsLoading) return <></>;
   const hasTeam = team !== null

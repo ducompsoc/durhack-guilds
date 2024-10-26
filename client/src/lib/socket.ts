@@ -2,7 +2,7 @@
 
 import { io, type Socket } from "socket.io-client";
 
-import { fetchMegateamsApi } from "./api";
+import { fetchGuildsApi } from "./api";
 
 class SocketManager {
   private socket: Socket;
@@ -30,7 +30,7 @@ class SocketManager {
 
   async authenticateSocket() {
     if (this.authenticated) return true;
-    const token = await fetchMegateamsApi("/auth/socket-token");
+    const token = await fetchGuildsApi("/auth/socket-token");
     const res = await this.emitAsync("authenticate", token.token);
     this.authenticated = res as boolean;
     return res;
@@ -41,6 +41,7 @@ class SocketManager {
   }
 
   stopListeningForQR() {
+    this.socket.emit("end_listen");
     this.qrCallback = undefined;
   }
 

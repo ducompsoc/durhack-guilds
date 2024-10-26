@@ -6,7 +6,7 @@ import {siteConfig} from "@/config/site";
 
 async function getUserProfile(request: NextRequest): Promise<User | null> {
   let userProfile: { data: User } | undefined
-  const sessionCookie = request.cookies.get("durhack-megateams-session")
+  const sessionCookie = request.cookies.get("durhack-guilds-session")
   if (sessionCookie != null) {
     const userProfileResponse = await fetch(
       new URL('/api/user', siteConfig.url),
