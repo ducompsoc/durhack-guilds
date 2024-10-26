@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import { Dialog } from "@headlessui/react";
 import * as React from "react";
 import { SWRConfig } from "swr";
@@ -50,7 +50,7 @@ export function TabbedPage({
           </object>
           <h1 className="text-3xl font-bold font-heading">DURHACK</h1>
           <button onClick={() => setOpen(true)}>
-            <ArrowRightOnRectangleIcon className="w-12 h-12" />
+            <ArrowRightStartOnRectangleIcon className="w-12 h-12" />
           </button>
         </div>
         <div className="p-6 pt-0 grow overflow-auto md:w-7/12 md:mx-auto">
@@ -87,7 +87,7 @@ export function TabbedPage({
         content={
           <div className="sm:flex sm:items-start">
             <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-              <ArrowRightOnRectangleIcon
+              <ArrowRightStartOnRectangleIcon
                 className="h-6 w-6 text-red-600"
                 aria-hidden="true"
               />
