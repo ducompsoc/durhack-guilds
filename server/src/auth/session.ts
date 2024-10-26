@@ -1,40 +1,82 @@
-import config from "config"
-import session, { MemoryStore, SessionOptions, Store } from "express-session"
-import * as constructor_session from "express-session"
-import MySQLStoreMeta, { MySQLStore as MySQLStoreType } from "express-mysql-session"
-import * as process from "process"
+import session, { type SessionStore, type SessionData } from "@otterhttp/session"
+import { Prisma } from "@prisma/client"
 
-import { mysql_options_schema, session_options_schema } from "@server/common/schema/config"
+import { signCookie, unsignCookieOrThrow } from "@server/auth/cookies"
+import { sessionConfig } from "@server/config"
+import { prisma } from "@server/database"
 
-// Augment express-session with a custom SessionData object
-declare module "express-session" {
-  interface SessionData {
-    generatedTeamName?: string
-    redirect_to?: string
+const { cookie: cookieOptions, ...sessionOptions } = sessionConfig
+
+class PrismaSessionStore implements SessionStore {
+  async destroy(sid: string): Promise<void> {
+    try {
+      await prisma.sessionRecord.delete({
+        where: { sessionRecordId: sid },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // if the record didn't exist to be deleted, that's fine
+        if (error.code === "P2025") return
+      }
+      throw error
+    }
+  }
+
+  async get(sid: string): Promise<SessionData | null> {
+    const sessionRecord = await prisma.sessionRecord.findUnique({
+      where: { sessionRecordId: sid },
+    })
+    if (!sessionRecord) return null
+    const sessionData = sessionRecord.data as SessionData | null
+    if (sessionData == null) return null
+    if (sessionData.cookie.expires && sessionData.cookie.expires.getTime() <= Date.now()) {
+      await this.destroy(sid)
+      return null
+    }
+    return sessionData
+  }
+
+  async set(sid: string, sess: SessionData<Record<string, Prisma.InputJsonValue>> & { userId?: string }): Promise<void> {
+    await prisma.sessionRecord.upsert({
+      where: { sessionRecordId: sid },
+      update: {
+        userId: sess.userId ?? null,
+        expiresAt: sess.cookie.expires,
+        data: sess,
+      },
+      create: {
+        sessionRecordId: sid,
+        userId: sess.userId ?? null,
+        expiresAt: sess.cookie.expires ?? null,
+        data: sess,
+      },
+    })
+  }
+
+  async touch(sid: string, sess: SessionData): Promise<void> {
+    await prisma.sessionRecord.update({
+      where: { sessionRecordId: sid },
+      data: {
+        expiresAt: sess.cookie.expires,
+      },
+    })
   }
 }
 
-function get_mysql_session_store(): MySQLStoreType {
-  const MySQLStore = MySQLStoreMeta(constructor_session)
-  const options = mysql_options_schema.parse(config.get("mysql.session"))
-  return new MySQLStore(options)
+export type MegateamsSessionRecord = Record<string, unknown> & {
+  userId?: string | undefined
+  keycloakOAuth2FlowCodeVerifier?: string | undefined
+  redirectTo?: string | undefined
+  generatedTeamName?: string | undefined
+  csrfTokenInitialized?: boolean | undefined
 }
 
-function get_memory_session_store(): MemoryStore {
-  return new MemoryStore()
-}
-
-function get_session_store(): Store {
-  if (process.env.NODE_ENV !== "production") {
-    return get_memory_session_store()
-  }
-
-  return get_mysql_session_store()
-}
-
-const sessionStore = get_session_store()
-
-const session_options = session_options_schema.parse(config.get("session")) as SessionOptions
-session_options.store = sessionStore
-
-export default session(session_options)
+export const getSession = session<MegateamsSessionRecord>({
+  store: new PrismaSessionStore(),
+  ...sessionOptions,
+  cookie: {
+    ...cookieOptions,
+    sign: signCookie,
+    unsign: unsignCookieOrThrow,
+  },
+})

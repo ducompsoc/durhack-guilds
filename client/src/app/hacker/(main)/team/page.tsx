@@ -1,28 +1,28 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import TeamBox from "./TeamBox";
 import { ExclamationTriangleIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Dialog } from "@headlessui/react";
-import ButtonModal from "@/app/components/ButtonModal";
-import useSWR from "swr";
-import { fetchMegateamsApi } from "@/app/lib/api";
-import { redirect } from "next/navigation";
+
+import { ButtonModal } from "@/components/button-modal";
+import { fetchMegateamsApi } from "@/lib/api";
+import { useMegateamsContext } from "@/hooks/use-megateams-context";
+
+import { TeamBox } from "./team-box";
 
 export default function Team() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
-  const { data: { team } = { team: null }, mutate: mutateTeam } =
-    useSWR("/user/team");
+  const { team, mutateTeam } = useMegateamsContext()
 
-  const members: [{ name: string; points: number }] = team?.members ?? [];
+  const members: { preferredNames: string; points: number }[] = team?.members ?? [];
   members.sort((a, b) => b.points - a.points);
 
   async function leaveTeam() {
     try {
       await fetchMegateamsApi("/user/team", { method: "DELETE" });
       setError("");
-      mutateTeam({ team: null });
+      await mutateTeam(null);
     } catch {
       setError("Failed to leave team!");
     }
@@ -36,11 +36,11 @@ export default function Team() {
         <div className="mt-4 dh-box p-2">
           <p className="font-semibold text-center">Team Members</p>
           <div className="grid grid-cols-[auto_auto] my-4 mx-4 gap-y-2 gap-x-2">
-            {members.map(({ name, points }, i) => (
+            {members.map(({ preferredNames, points }, i) => (
               <Fragment key={i}>
                 <div className="flex items-center">
                   <UserIcon className="w-4 h-4 mr-2" />
-                  <p>{name}</p>
+                  <p>{preferredNames}</p>
                 </div>
                 <p className="text-gray-600 dark:text-neutral-400">
                   {points} points

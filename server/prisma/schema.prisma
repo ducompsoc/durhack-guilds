@@ -1,0 +1,129 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["typedSql"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Area {
+  areaId       Int      @id @default(autoincrement()) @map("area_id")
+  megateamId   Int      @map("megateam_id")
+  areaName     String   @map("area_name") @db.VarChar(255)
+  areaLocation String   @map("area_location") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  megateam     Megateam @relation(fields: [megateamId], references: [megateamId], onDelete: NoAction)
+  teams        Team[]
+
+  @@index([megateamId])
+}
+
+model Megateam {
+  megateamId          Int      @id @default(autoincrement()) @map("megateam_id")
+  megateamName        String   @map("megateam_name") @db.VarChar(255)
+  megateamDescription String?  @map("megateam_description") @db.VarChar(255)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  areas               Area[]
+}
+
+model Point {
+  pointId        Int      @id @default(autoincrement()) @map("point_id")
+  value          Int
+  originQrCodeId Int?     @map("origin_qr_code_id")
+  redeemerUserId String   @map("redeemer_user_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  originQrCode   QrCode?  @relation(fields: [originQrCodeId], references: [qrCodeId])
+  redeemerUser   User     @relation(fields: [redeemerUserId], references: [keycloakUserId], onDelete: Cascade)
+
+  @@index([originQrCodeId])
+  @@index([redeemerUserId])
+}
+
+model QrCode {
+  qrCodeId      Int              @id @default(autoincrement()) @map("qr_code_id")
+  name          String           @db.VarChar(255)
+  category      QRCodes_category @default(workshop)
+  payload       String           @unique @db.Uuid
+  pointsValue   Int              @map("points_value")
+  maxUses       Int?             @map("max_uses")
+  state         Boolean
+  startTime     DateTime         @map("start_time")
+  expiryTime    DateTime         @map("expiry_time")
+  creatorUserId String           @map("creator_id") @db.Uuid
+  challengeRank Int?             @unique() @map("challenge_rank")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  redeems       Point[]
+  creator       User             @relation(fields: [creatorUserId], references: [keycloakUserId], onDelete: NoAction)
+
+  @@index([creatorUserId])
+}
+
+model Team {
+  teamId           Int      @id @default(autoincrement()) @map("team_id")
+  joinCode         Int      @unique() @map("join_code")
+  discordChannelId String?  @map("discord_channel_id") @db.VarChar(255)
+  teamName         String   @unique() @map("team_name") @db.VarChar(255)
+  areaId           Int?     @map("area_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  area             Area?    @relation(fields: [areaId], references: [areaId])
+  members          User[]
+
+  @@index([areaId])
+}
+
+model User {
+  keycloakUserId   String          @id @map("keycloak_user_id") @db.Uuid()
+  teamId           Int?            @map("team_id")
+  initialLoginTime DateTime?       @map("initial_login_time")
+  lastLoginTime    DateTime?       @map("last_login_time")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  team             Team?           @relation(fields: [teamId], references: [teamId])
+  points           Point[]
+  createdQrCodes   QrCode[]
+  tokenSet         TokenSet?
+  sessions         SessionRecord[]
+
+  @@index([teamId])
+}
+
+model TokenSet {
+  userId String @id @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [keycloakUserId])
+
+  tokenType    String?   @map("token_type")
+  accessToken  String?   @map("access_token")
+  idToken      String?   @map("id_token")
+  refreshToken String?   @map("refresh_token")
+  scope        String?
+  accessExpiry DateTime? @map("access_expiry") @db.Timestamp(0)
+  sessionState String?   @map("session_state")
+
+  @@index([userId])
+}
+
+model SessionRecord {
+  sessionRecordId String    @id @map("session_record_id")
+  userId          String?   @map("user_id") @db.Uuid
+  user            User?     @relation(fields: [userId], references: [keycloakUserId])
+  data            Json
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+}
+
+enum QRCodes_category {
+  workshop
+  sponsor
+  challenge
+  preset
+}

@@ -1,58 +1,53 @@
-import createHttpError from "http-errors"
-import { NextFunction, Request, Response } from "express"
-import { ValueError } from "@server/common/errors"
+import type { NextFunction } from "@otterhttp/app"
+import { ClientError, HttpStatus, ServerError } from "@otterhttp/errors"
 
-export function handleMethodNotAllowed() {
-  // The endpoint does support this method: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-  throw new createHttpError.MethodNotAllowed()
+import { getSession } from "@server/auth/session"
+import { ValueError } from "@server/common/errors"
+import type { Middleware, Request, Response } from "@server/types"
+
+type HttpVerb = "GET" | "HEAD" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | "PATCH"
+
+export function methodNotAllowed(allowedMethods: Iterable<HttpVerb>): Middleware {
+  const allowHeaderValue = Array.from(allowedMethods).join(", ")
+  const allowedMethodSet: Set<string> = new Set(allowedMethods)
+
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.method || !allowedMethodSet.has(req.method)) {
+      res.setHeader("Allow", allowHeaderValue)
+      res.sendStatus(405)
+      return
+    }
+
+    next()
+    return
+  }
 }
 
 export function handleNotImplemented() {
-  throw new createHttpError.NotImplemented()
+  throw new ServerError("", { statusCode: HttpStatus.NotImplemented })
 }
 
 export function handleFailedAuthentication(request: Request) {
   if (request.user) {
     // Re-authenticating will not allow access (i.e. you are not a high-enough privileged user):
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
-    throw new createHttpError.Forbidden()
+    throw new ClientError("", { statusCode: HttpStatus.Forbidden })
   }
   // Lacking any credentials at all: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/401
-  throw new createHttpError.Unauthorized()
-}
-
-export function mutateRequestValue<T>(
-  getter: (request: Request) => unknown,
-  mutator: (value: unknown) => T,
-  setter: (response: Response, value: T) => void,
-) {
-  return function (request: Request, response: Response, next: NextFunction) {
-    const valueToMutate = getter(request)
-    const mutatedValue = mutator(valueToMutate)
-    setter(response, mutatedValue)
-    next()
-  }
-}
-
-function getRouteParameter(key: string) {
-  return function (request: Request): unknown {
-    return request.params[key]
-  }
+  throw new ClientError("", { statusCode: HttpStatus.Unauthorized })
 }
 
 function getQueryParameter(key: string) {
-  return function (request: Request): unknown {
-    return request.query[key]
-  }
+  return (request: Request): unknown => request.query[key]
 }
 
 function setLocalValue<T>(key: string) {
-  return function (response: Response, value: T): void {
+  return (response: Response, value: T): void => {
     response.locals[key] = value
   }
 }
 
-function validateID(value: unknown): number {
+function parseId(value: unknown): number {
   if (typeof value !== "string") {
     throw new TypeError(`'${value}' should be a single string value.`)
   }
@@ -72,19 +67,31 @@ function validateID(value: unknown): number {
  * @returns A middleware function that takes a request, response, and next function.
  * The key is extracted from the request's params and set in the local key of the response.
  */
-export function parseRouteId(key: string) {
-  return mutateRequestValue(
-    getRouteParameter(key), // returns a function that takes a request and returns the value key from the request's params
-    validateID, // function validates whether input value is a valid ID (i.e. number >= 0) & returns number in this case
-    setLocalValue(key), // returns a function that takes a response and a value and sets the response's local key to the value
-  )
+export function parseRouteId(key: string): Middleware {
+  return (request, response, next) => {
+    const id = request.params[key]
+    response.locals[key] = parseId(id)
+    next()
+  }
 }
 
 export function useSelfId(request: Request, response: Response, next: NextFunction): void {
   if (!request.user) {
-    throw new createHttpError.Unauthorized()
+    throw new ClientError("", { statusCode: HttpStatus.Unauthorized })
   }
 
-  response.locals.user_id = request.user.id
+  response.locals.user_id = request.user.keycloakUserId
+  next()
+}
+
+export async function rememberUserReferrerForRedirect(request: Request, response: Response, next: () => void) {
+  const referrer = request.query.referrer
+
+  if (referrer != null && !Array.isArray(referrer)) {
+    const session = await getSession(request, response)
+    session.redirectTo = referrer
+    await session.commit()
+  }
+
   next()
 }

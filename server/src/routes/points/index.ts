@@ -1,23 +1,22 @@
-import { Router as ExpressRouter } from "express"
+import { App } from "@otterhttp/app"
 
-import { handleFailedAuthentication, handleMethodNotAllowed, parseRouteId } from "@server/common/middleware"
+import { handleFailedAuthentication, methodNotAllowed, parseRouteId } from "@server/common/middleware"
+import type { Request, Response } from "@server/types"
 
-import handlers from "./point_handlers"
+import { pointsHandlers } from "./points-handlers"
 
-const points_router = ExpressRouter()
+export const pointsApp = new App<Request, Response>()
 
-points_router
+pointsApp
   .route("/")
-  .get(handlers.getPointsList)
-  .post(handlers.createPoint, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
+  .all(methodNotAllowed(["GET", "POST"]))
+  .get(pointsHandlers.getPointsList(), handleFailedAuthentication)
+  .post(pointsHandlers.createPoint(), handleFailedAuthentication)
 
-points_router
+pointsApp
   .route("/:point_id")
+  .all(methodNotAllowed(["GET", "PATCH", "DELETE"]))
   .all(parseRouteId("point_id"))
-  .get(handlers.getPointDetails)
-  .patch(handlers.patchPointDetails, handleFailedAuthentication)
-  .delete(handlers.deletePoint, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
-
-export default points_router
+  .get(pointsHandlers.getPointDetails(), handleFailedAuthentication)
+  .patch(pointsHandlers.patchPointDetails(), handleFailedAuthentication)
+  .delete(pointsHandlers.deletePoint(), handleFailedAuthentication)

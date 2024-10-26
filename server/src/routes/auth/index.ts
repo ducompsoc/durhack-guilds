@@ -1,34 +1,27 @@
-import { Router as ExpressRouter } from "express"
-import passport from "passport"
+import { App } from "@otterhttp/app"
 
 import { handleGetCsrfToken } from "@server/auth/csrf"
-import { handleMethodNotAllowed } from "@server/common/middleware"
+import { handleFailedAuthentication, methodNotAllowed } from "@server/common/middleware"
+import type { Request, Response } from "@server/types"
 
-import handlers from "./auth_handlers"
-import rememberUserReferrerForRedirect from "./rememberUserReferrerForRedirect"
+import { authHandlers } from "./auth-handlers"
+import { keycloakApp } from "./keycloak"
 
-const auth_router = ExpressRouter()
+export const authApp = new App<Request, Response>()
 
-auth_router
-  .route("/durhack-live")
-  .all(rememberUserReferrerForRedirect)
-  .get(passport.authenticate("oauth2"))
-  .all(handleMethodNotAllowed)
+authApp.use("/keycloak", keycloakApp)
 
-auth_router
-  .route("/durhack-live/callback")
-  .get(
-    passport.authenticate("oauth2", {
-      failureRedirect: "/",
-      keepSessionInfo: true,
-      session: true,
-    }),
-    handlers.handleLoginSuccess,
-  )
-  .all(handleMethodNotAllowed)
+authApp
+  .route("/csrf-token")
+  .all(methodNotAllowed(["GET"]))
+  .get(handleGetCsrfToken)
 
-auth_router.route("/csrf-token").get(handleGetCsrfToken).all(handleMethodNotAllowed)
+authApp
+  .route("/socket-token")
+  .all(methodNotAllowed(["GET"]))
+  .get(authHandlers.handleGetSocketToken(), handleFailedAuthentication)
 
-auth_router.route("/logout").post(handlers.handleLogout).all(handleMethodNotAllowed)
-
-export default auth_router
+authApp
+  .route("/logout")
+  .all(methodNotAllowed(["POST"]))
+  .post(authHandlers.handleLogout())

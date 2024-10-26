@@ -1,23 +1,22 @@
-import { Router as ExpressRouter } from "express"
+import { App } from "@otterhttp/app"
 
-import { handleFailedAuthentication, handleMethodNotAllowed, parseRouteId } from "@server/common/middleware"
+import { handleFailedAuthentication, methodNotAllowed, parseRouteId } from "@server/common/middleware"
+import type { Request, Response } from "@server/types"
 
-import handlers from "./area_handlers"
+import { areaHandlers } from "./area-handlers"
 
-const areas_router = ExpressRouter()
+export const areasApp = new App<Request, Response>()
 
-areas_router
+areasApp
   .route("/")
-  .get(handlers.getAreasList, handleFailedAuthentication)
-  .post(handlers.createArea, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
+  .all(methodNotAllowed(["GET", "POST"]))
+  .get(areaHandlers.getAreasList(), handleFailedAuthentication)
+  .post(areaHandlers.createArea(), handleFailedAuthentication)
 
-areas_router
+areasApp
   .route("/:area_id")
+  .all(methodNotAllowed(["GET", "PATCH", "DELETE"]))
   .all(parseRouteId("area_id"))
-  .get(handlers.getAreaDetails, handleFailedAuthentication)
-  .patch(handlers.patchAreaDetails, handleFailedAuthentication)
-  .delete(handlers.deleteArea, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
-
-export default areas_router
+  .get(areaHandlers.getAreaDetails(), handleFailedAuthentication)
+  .patch(areaHandlers.patchAreaDetails(), handleFailedAuthentication)
+  .delete(areaHandlers.deleteArea(), handleFailedAuthentication)

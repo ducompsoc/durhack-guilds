@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react"
 import {
   ChartBarIcon,
   NewspaperIcon,
@@ -7,21 +8,24 @@ import {
   ScaleIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
-import TabbedPage from "../components/TabbedPage";
-import useUser from "../lib/useUser";
 import { redirect } from "next/navigation";
+
+import { TabbedPage } from "@/components/tabbed-page";
+import { isAdmin as getIsAdmin, isVolunteer as getIsVolunteer } from "@/lib/is-role";
+import { useMegateamsContext } from "@/hooks/use-megateams-context";
 
 export default function VolunteerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useUser({ redirectTo: "/" });
-  if (isLoading) return <></>;
-  if (!["volunteer", "sponsor", "admin"].includes(user?.role))
-    return redirect("/");
-  const isAdmin = user?.role === "admin";
-  const isVolunteer = user?.role === "admin" || user?.role === "volunteer";
+  const { user, userIsLoading } = useMegateamsContext();
+  if (userIsLoading) return <></>;
+  if (user == null) return redirect("/")
+
+  const isAdmin = getIsAdmin(user)
+  const isVolunteer = isAdmin || getIsVolunteer(user)
+  if (!isAdmin && !isVolunteer) return redirect("/");
 
   const tabs = [
     { icon: QrCodeIcon, path: "/volunteer" },

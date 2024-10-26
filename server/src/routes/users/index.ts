@@ -1,23 +1,20 @@
-import { Router as ExpressRouter } from "express"
+import { App } from "@otterhttp/app"
 
-import { handleFailedAuthentication, handleMethodNotAllowed, parseRouteId } from "@server/common/middleware"
+import { handleFailedAuthentication, methodNotAllowed } from "@server/common/middleware"
+import type { Request, Response } from "@server/types"
 
-import handlers from "./user_handlers"
+import { usersHandlers } from "./users-handlers"
 
-const users_router = ExpressRouter()
+export const usersApp = new App<Request, Response>()
 
-users_router
+usersApp
   .route("/")
-  .get(handlers.getUsersListAsAdmin, handlers.getUsersListDefault)
-  .post(handlers.createUserAsAdmin, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
+  .all(methodNotAllowed(["GET"]))
+  .get(usersHandlers.getUsersListAsAdmin(), usersHandlers.getUsersListDefault())
 
-users_router
+usersApp
   .route("/:user_id")
-  .all(parseRouteId("user_id"))
-  .get(handlers.getUserDetailsAsAdmin, handlers.getUserDetailsDefault)
-  .patch(handlers.patchUserDetailsAsAdmin, handlers.patchMyUserDetails, handleFailedAuthentication)
-  .delete(handlers.deleteUserAsAdmin, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
-
-export default users_router
+  .all(methodNotAllowed(["GET", "PATCH", "DELETE"]))
+  .get(usersHandlers.getUserDetailsAsAdmin(), usersHandlers.getUserDetailsDefault())
+  .patch(usersHandlers.patchUserDetailsAsAdmin(), usersHandlers.patchMyUserDetails(), handleFailedAuthentication)
+  .delete(usersHandlers.deleteUserAsAdmin(), handleFailedAuthentication)

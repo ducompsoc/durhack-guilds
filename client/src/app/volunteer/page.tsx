@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 
 const Volunteer = dynamic(
-  () => import("./(volunteer)/VolunteerPage"),
+  () => import("./(volunteer)/volunteer-page"),
   {
     ssr: false,
   }

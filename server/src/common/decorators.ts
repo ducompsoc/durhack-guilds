@@ -1,84 +1,105 @@
-import { NextFunction, Request, Response } from "express"
-import { UserRole } from "@server/common/model_enums"
+import { UserRole } from "@server/common/model-enums"
+import type { Middleware, Request, Response } from "@server/types"
 
-type ICondition = (request: Request, response: Response) => boolean
+type Condition = (request: Request, response: Response) => boolean | Promise<boolean>
 
 /**
- * Returns a decorator that can be applied to an Express request handler class method.
- * The decorated method will call the provided condition function with Express request
- * and response objects.
- * If the condition returns `false`, then the handler will be skipped.
- * If the condition returns `true`, the handler will consider the request as usual.
+ * Factory that creates a TypeScript decorator for a condition.
+ * Decorated methods are expected to return a middleware function;
+ * the decorated function will return the same middleware that will execute
+ * only if the condition evaluates true. If the condition evaluates false, the
+ * middleware will invoke next() and terminate.
  *
  * @param condition
  */
-export function requireCondition(condition: ICondition) {
-  return function (target: any, property_key: string, descriptor: PropertyDescriptor) {
-    const old_function = descriptor.value
+export function requireCondition(condition: Condition) {
+  return (
+    value: (this: unknown, ...rest: unknown[]) => Middleware,
+    _: {
+      kind: "method"
+    },
+  ) => {
+    return function wrapped_function(this: unknown, ...args: unknown[]): Middleware {
+      const middleware: Middleware = value.call(this, ...args)
 
-    async function wrapped_function(request: Request, response: Response, next: NextFunction) {
-      if (!condition(request, response)) {
-        return next()
+      return async (request: Request, response: Response, next: () => void): Promise<void> => {
+        const evaluatedCondition = await condition(request, response)
+        if (!evaluatedCondition) {
+          next()
+          return
+        }
+        await middleware.call(value, request, response, next)
       }
-      return await old_function.apply(target, [request, response, next])
     }
-
-    descriptor.value = wrapped_function
   }
 }
 
-export function userIsRole(role: UserRole) {
-  return function (request: Request) {
-    return request.user?.role === role
+export function userHasRole(role: UserRole): Condition {
+  return (request: Request) => {
+    if (request.userProfile?.groups == null) return false
+    return request.userProfile.groups.some((userRole) => {
+      return role === userRole
+    })
   }
 }
 
-export function userIsLoggedIn(request: Request) {
-  return !!request.user
+export function userIsLoggedIn(): Condition {
+  return (request: Request) => request.user != null
 }
 
 /**
- * Decorator that ensures `request.user.role` is `UserRole.admin`.
+ * Decorator that ensures `request.user.roles` contains `UserRole.admin`.
  */
-export const requireUserIsAdmin = requireCondition(userIsRole(UserRole.admin))
+export function requireUserIsAdmin() {
+  return requireCondition(userHasRole(UserRole.admin))
+}
 
 /**
- * Decorator that ensures `request.user.role` is `UserRole.volunteer`.
+ * Decorator that ensures `request.user.roles` contains `UserRole.volunteer`.
  */
-export const requireUserIsVolunteer = requireCondition(userIsRole(UserRole.volunteer))
+export function requireUserIsVolunteer() {
+  return requireCondition(userHasRole(UserRole.volunteer))
+}
 
 /**
- * Decorator that ensures `request.user.role` is `UserRole.sponsor`.
+ * Decorator that ensures `request.user.roles` contains `UserRole.sponsor`.
  */
-export const requireUserIsSponsor = requireCondition(userIsRole(UserRole.sponsor))
+export function requireUserIsSponsor() {
+  return requireCondition(userHasRole(UserRole.sponsor))
+}
 
 /**
  * Decorator that ensures `request.user` is not null/undefined.
  */
-export const requireLoggedIn = requireCondition(userIsLoggedIn)
+export function requireLoggedIn() {
+  return requireCondition(userIsLoggedIn())
+}
 
 /**
- * Decorator that ensures `request.user.role` is one of the provided roles.
+ * Decorator that ensures `request.user.roles` contains one of the provided roles.
  */
-export function requireUserIsOneOf(...roles: UserRole[]) {
-  return requireCondition(function (request: Request): boolean {
-    return !!request.user && roles.includes(request.user.role)
+export function requireUserHasOne(...roles: UserRole[]) {
+  return requireCondition((request: Request): boolean => {
+    if (request.userProfile?.groups == null) return false
+    return request.userProfile.groups.some((role) => {
+      return roles.some((checkAgainstRole) => role === checkAgainstRole)
+    })
   })
 }
 
 /**
  * Condition function that determines if the resource a user is trying to access/modify
  * is themselves.
- *
- * @param request
- * @param response
- * @private
  */
-export function userIsSelf(request: Request, response: Response): boolean {
-  return !!request.user && request.user.id === response.locals.user_id
+export function userIsSelf(): Condition {
+  return (request: Request, response: Response): boolean => {
+    return request.user != null && request.user.keycloakUserId === response.locals.user_id
+  }
 }
 
 /**
  * Decorator that ensures a user is trying to access/modify themselves, not some other person.
  */
-export const requireSelf = requireCondition(userIsSelf)
+export function requireSelf() {
+  return requireCondition(userIsSelf())
+}

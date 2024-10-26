@@ -1,50 +1,65 @@
-import express, { Express } from "express"
-import passport from "passport"
-import config from "config"
-import * as process from "process"
+import { type Server, createServer } from "node:http"
+import * as process from "node:process"
+import { App } from "@otterhttp/app"
+import { Server as SocketIO } from "socket.io"
 
-import { listen_options_schema } from "@server/common/schema/config"
+import { matchSignedCookie, signCookie, unsignCookieOrThrow } from "@server/auth/cookies"
+import { origin, listenConfig } from "@server/config"
+import { apiErrorHandler } from "@server/routes/error-handling"
 
-import session from "./auth/session"
-import sequelize, { ensureDatabaseExists } from "./database"
-import api_router from "./routes"
-import "./auth"
+import { Request } from "./request"
+import { Response } from "./response"
+import { apiApp } from "./routes"
+import SocketManager from "./socket"
+import "./database"
 
 const environment = process.env.NODE_ENV
 const dev = environment !== "production"
 
-function getExpressApp(): Express {
-  const app = express()
+function getApp(): App<Request, Response> {
+  const app = new App<Request, Response>({
+    settings: {
+      setCookieOptions: {
+        sign: signCookie,
+      },
+      cookieParsing: {
+        signedCookieMatcher: matchSignedCookie,
+        cookieUnsigner: unsignCookieOrThrow,
+      },
+      "trust proxy": ["loopback"],
+    },
+    onError: apiErrorHandler,
+  })
 
-  app.use(session)
-  app.use(passport.initialize())
-  app.use(passport.session())
-
-  app.use("/api", api_router)
+  app.use("/api", apiApp)
 
   return app
 }
 
+function getServer(app: App<Request, Response>): Server<typeof Request, typeof Response> {
+  const server = createServer<typeof Request, typeof Response>({
+    IncomingMessage: Request,
+    ServerResponse: Response,
+  })
+  server.on("request", app.attach)
+  const io = new SocketIO(server as Server)
+  SocketManager.initialise(io)
+
+  return server
+}
+
 async function main() {
-  await ensureDatabaseExists()
+  const app = getApp()
+  const server = getServer(app)
 
-  if (dev) {
-    // Run with the force: true option to update your schema if your server's schema
-    // is out-of-date compared to the code's schema. Note this will wipe your database.
-    // https://github.com/ducompsoc/durhack-megateams/pull/32#issuecomment-1652556468
-    await sequelize.sync({ force: false })
-  }
-
-  const app = getExpressApp()
-
-  const listen = listen_options_schema.parse(config.get("listen"))
-
-  app.listen(listen.port, listen.host, () => {
-    console.log(`> Server listening on http://${listen.host}:${listen.port} as ${dev ? "development" : environment}`)
+  server.listen(listenConfig.port, listenConfig.host, () => {
+    console.log(
+      `> Server listening on http://${listenConfig.host}:${listenConfig.port} as ${dev ? "development" : environment}, access via ${origin}`,
+    )
   })
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(error)
   process.exit(1)
 })

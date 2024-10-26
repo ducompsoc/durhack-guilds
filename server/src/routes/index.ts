@@ -1,60 +1,130 @@
-import config from "config"
-import { Router as ExpressRouter, Request, Response } from "express"
-import bodyParser from "body-parser"
-import methodOverride from "method-override"
-import createHttpError from "http-errors"
-import cookie_parser from "cookie-parser"
-import { z } from "zod"
+import assert from "node:assert/strict"
+import { App } from "@otterhttp/app"
+import { ClientError, ServerError } from "@otterhttp/errors"
+import { json } from "@otterhttp/parsec"
+import type { UserinfoResponse } from "openid-client"
 
-import { handleMethodNotAllowed } from "@server/common/middleware"
-
+import { adaptTokenSetToClient, adaptTokenSetToDatabase } from "@server/auth/adapt-token-set"
 import { doubleCsrfProtection } from "@server/auth/csrf"
-import auth_router from "./auth"
-import areas_router from "./areas"
-import megateams_router from "./megateams"
-import points_router from "./points"
-import qr_codes_router from "./qr_codes"
-import teams_router from "./teams"
-import users_router from "./users"
-import user_router from "./user"
-import discord_router from "./discord"
-import api_error_handler from "./error_handling"
+import { keycloakClient } from "@server/auth/keycloak-client"
+import type { KeycloakUserInfo } from "@server/auth/keycloak-client"
+import { getSession } from "@server/auth/session"
+import { isNetworkError } from "@server/common/is-network-error"
+import { methodNotAllowed } from "@server/common/middleware"
+import { csrfConfig } from "@server/config"
+import { prisma } from "@server/database"
+import type { Request, Response } from "@server/types"
 
-const api_router = ExpressRouter()
+import { areasApp } from "./areas"
+import { authApp } from "./auth"
+import { discordApp } from "./discord"
+import { megateamsApp } from "./megateams"
+import { pointsApp } from "./points"
+import { qrCodesApp } from "./qr-codes"
+import { teamsApp } from "./teams"
+import { userApp } from "./user"
+import { usersApp } from "./users"
 
-api_router.use(cookie_parser(config.get("cookie-parser.secret")))
-api_router.use(bodyParser.json())
-api_router.use(bodyParser.urlencoded({ extended: true }))
+export const apiApp = new App<Request, Response>()
 
-const mitigateCsrf = z.boolean().parse(config.get("csrf.enabled"))
-if (mitigateCsrf) {
-  api_router.use(doubleCsrfProtection)
+apiApp.use(json())
+apiApp.use(async (request, response, next) => {
+  const session = await getSession(request, response)
+  if (session.userId == null) return next()
+  const user = await prisma.user.findUnique({
+    where: { keycloakUserId: session.userId },
+    include: { tokenSet: true },
+  })
+
+  if (user == null || user.tokenSet == null) {
+    session.userId = undefined
+    await session.commit()
+    return next()
+  }
+
+  // if the token set has expired, we try to refresh it
+  let tokenSet = adaptTokenSetToClient(user.tokenSet)
+  if (tokenSet.expired() && tokenSet.refresh_token != null) {
+    try {
+      tokenSet = await keycloakClient.refresh(tokenSet.refresh_token)
+      await prisma.tokenSet.update({
+        where: { userId: user.keycloakUserId },
+        data: adaptTokenSetToDatabase(tokenSet),
+      })
+    } catch (error) {
+      if (isNetworkError(error)) {
+        throw new ServerError("Encountered network error while attempting to refresh a token set", {
+          statusCode: 500,
+          exposeMessage: false,
+          cause: error,
+        })
+      }
+      assert(error instanceof Error)
+      console.error(`Failed to refresh access token for ${tokenSet.claims().email}: ${error.stack}`)
+    }
+  }
+
+  // if the token set is still expired, the user needs to log in again
+  if (tokenSet.expired() || tokenSet.access_token == null) {
+    session.userId = undefined
+    await session.commit()
+    return next()
+  }
+
+  // use the token set to get the user profile
+  let profile: UserinfoResponse<KeycloakUserInfo> | undefined
+  try {
+    profile = await keycloakClient.userinfo<KeycloakUserInfo>(tokenSet.access_token)
+  } catch (error) {
+    if (isNetworkError(error)) {
+      throw new ServerError("Encountered network error while attempting to fetch profile info", {
+        statusCode: 500,
+        exposeMessage: false,
+        cause: error,
+      })
+    }
+
+    assert(error instanceof Error)
+    console.error(`Failed to fetch profile info for ${tokenSet.claims().email}: ${error.stack}`)
+
+    // if the access token is rejected, the user needs to log in again
+    session.userId = undefined
+    await session.commit()
+    return next()
+  }
+
+  request.userProfile = profile
+  request.userTokenSet = tokenSet
+  request.user = user
+  next()
+})
+
+if (csrfConfig.enabled) {
+  apiApp.use(doubleCsrfProtection)
 }
 
-function handle_root_request(request: Request, response: Response) {
+function rootRequestHandler(request: Request, response: Response) {
   response.status(200)
   response.json({ status: response.statusCode, message: "OK", api_version: 1 })
 }
 
-function handle_unhandled_request() {
-  throw new createHttpError.NotFound("Unknown API route.")
+function routeFallthroughHandler() {
+  throw new ClientError("Unknown API route.", { statusCode: 404, expected: true })
 }
 
-api_router.route("/").get(handle_root_request).all(handleMethodNotAllowed)
+apiApp
+  .route("/")
+  .all(methodNotAllowed(["GET"]))
+  .get(rootRequestHandler)
 
-api_router.use("/auth", auth_router)
-api_router.use("/areas", areas_router)
-api_router.use("/megateams", megateams_router)
-api_router.use("/points", points_router)
-api_router.use("/qr_codes", qr_codes_router)
-api_router.use("/teams", teams_router)
-api_router.use("/users", users_router)
-api_router.use("/user", user_router)
-api_router.use("/discord", discord_router)
+apiApp.use("/auth", authApp)
+apiApp.use("/areas", areasApp)
+apiApp.use("/megateams", megateamsApp)
+apiApp.use("/points", pointsApp)
+apiApp.use("/qr_codes", qrCodesApp)
+apiApp.use("/teams", teamsApp)
+apiApp.use("/users", usersApp)
+apiApp.use("/user", userApp)
+apiApp.use("/discord", discordApp)
 
-api_router.use(handle_unhandled_request)
-
-api_router.use(methodOverride())
-api_router.use(api_error_handler)
-
-export default api_router
+apiApp.use(routeFallthroughHandler)

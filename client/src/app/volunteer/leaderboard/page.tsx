@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 
 const Leaderboard = dynamic(
-  () => import("../../components/leaderboard/Leaderboard"),
+  () => import("@/components/leaderboard/leaderboard"),
   {
     ssr: false,
   }

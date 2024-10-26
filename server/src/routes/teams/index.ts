@@ -1,31 +1,33 @@
-import { Router as ExpressRouter } from "express"
+import { App } from "@otterhttp/app"
 
-import { handleFailedAuthentication, handleMethodNotAllowed, parseRouteId } from "@server/common/middleware"
+import { handleFailedAuthentication, methodNotAllowed, parseRouteId } from "@server/common/middleware"
+import type { Request, Response } from "@server/types"
 
-import handlers from "./teams_handlers"
+import { teamsHandlers } from "./teams-handlers"
 
-const teams_router = ExpressRouter()
+export const teamsApp = new App<Request, Response>()
 
-teams_router
+teamsApp
   .route("/")
-  .get(handlers.listTeamsAsAdmin, handlers.listTeamsAsAnonymous)
-  .post(handlers.createTeamAsAdmin, handlers.createTeamAsHacker, handleFailedAuthentication)
+  .get(teamsHandlers.listTeamsAsAdmin(), teamsHandlers.listTeamsAsAnonymous())
+  .post(teamsHandlers.createTeamAsAdmin(), teamsHandlers.createTeamAsHacker(), handleFailedAuthentication)
 
-teams_router.route("/generate-name").get(handlers.generateTeamName).all(handleMethodNotAllowed)
+teamsApp
+  .route("/generate-name")
+  .all(methodNotAllowed(["GET"]))
+  .get(teamsHandlers.generateTeamName())
 
-teams_router
+teamsApp
   .route("/:team_id/memberships")
+  .all(methodNotAllowed(["POST", "DELETE"]))
   .all(parseRouteId("team_id"))
-  .post(handlers.addUserToTeamAsAdmin, handleFailedAuthentication)
-  .delete(handlers.removeUserFromTeamAsAdmin, handleFailedAuthentication)
-  .all(handleMethodNotAllowed)
+  .post(teamsHandlers.addUserToTeamAsAdmin(), handleFailedAuthentication)
+  .delete(teamsHandlers.removeUserFromTeamAsAdmin(), handleFailedAuthentication)
 
-teams_router
+teamsApp
   .route("/:team_id")
   .all(parseRouteId("team_id"))
-  .get(handlers.getTeamDetails)
-  .patch(handlers.patchTeamAsAdmin, handleFailedAuthentication)
-  .delete(handlers.deleteTeam)
-  .all(handleMethodNotAllowed)
-
-export default teams_router
+  .all(methodNotAllowed(["GET", "PATCH", "DELETE"]))
+  .get(teamsHandlers.getTeamDetails())
+  .patch(teamsHandlers.patchTeamAsAdmin(), handleFailedAuthentication)
+  .delete(teamsHandlers.deleteTeam())

@@ -1,5 +1,6 @@
 import "./globals.scss";
 import { Audiowide, Inter } from "next/font/google";
+import { MegateamsContextProvider } from "@/components/megateams-context-provider";
 
 const headings = Audiowide({
   subsets: ["latin"],
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={inter.className + " h-full dark:bg-neutral-900 " + headings.variable}>
-        {children}
+        <MegateamsContextProvider>
+          {children}
+        </MegateamsContextProvider>
       </body>
     </html>
   );
