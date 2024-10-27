@@ -1,8 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "durhack-megateams-server",
-  "description": "Server for DurHack Megateams project",
-  "version": "0.1.0",
+  "name": "@durhack/guilds-server",
+  "description": "Server for DurHack Guilds project",
   "private": true,
   "author": {
     "name": "Durham University Computing Society",
@@ -16,7 +15,7 @@
     "Luca Huelle <lucahuelle@gmail.com>"
   ],
   "repository": {
-    "url": "https://github.com/ducompsoc/durhack-megateams"
+    "url": "https://github.com/ducompsoc/durhack-guilds"
   },
   "engines": {
     "node": ">=20"
@@ -45,7 +44,6 @@
     "@otterhttp/session": "^0.3.1",
     "@prisma/client": "^5.19.0",
     "corstisol": "^1.0.0",
-    "cross-env": "^7.0.3",
     "openid-client": "^5.6.5",
     "socket.io": "^4.7.5",
     "unique-names-generator": "^4.7.1",
