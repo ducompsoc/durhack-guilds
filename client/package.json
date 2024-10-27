@@ -1,7 +1,6 @@
 {
-  "name": "durhack-megateams-server",
-  "description": "Client app for the DurHack Megateams project",
-  "version": "0.1.0",
+  "name": "@durhack/guilds-client",
+  "description": "Client app for the DurHack Guilds project",
   "private": true,
   "author": {
     "name": "Durham University Computing Society",
@@ -15,7 +14,7 @@
     "Luca Huelle <lucahuelle@gmail.com>"
   ],
   "repository": {
-    "url": "https://github.com/ducompsoc/durhack-megateams"
+    "url": "https://github.com/ducompsoc/durhack-guilds"
   },
   "scripts": {
     "dev": "next dev -p 3100",
