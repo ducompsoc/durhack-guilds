@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package",
   "name": "@durhack/guilds-client",
   "description": "Client app for the DurHack Guilds project",
   "private": true,
@@ -62,6 +63,5 @@
     "eslint": "^8.42.0",
     "eslint-plugin-tsdoc": "^0.2.17",
     "tailwindcss-bg-patterns": "^0.3.0"
-  },
-  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
+  }
 }
