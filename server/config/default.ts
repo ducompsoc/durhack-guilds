@@ -74,16 +74,6 @@ export default {
         algorithm: "hsa",
         secret: "totally-a-secure-SECRET",
       },
-      {
-        for: TokenType.refreshToken,
-        algorithm: "hsa",
-        secret: "an-even-more-secure-SECRET",
-      },
-      {
-        for: TokenType.authorizationCode,
-        algorithm: "hsa",
-        secret: "the-MOST-secure-SECRET",
-      },
     ],
   },
   keycloak: {
