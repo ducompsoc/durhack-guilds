@@ -22,16 +22,16 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "npx cross-env NODE_ENV=production node ./dist/main.js",
+    "start": "node ./dist/main.js",
     "dev": "tsx ./src/main",
     "dev:watch": "tsx watch ./src/main",
-    "compile": "npx tsc -p tsconfig.json && npx tsc-alias -p tsconfig.json",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "build": "npm run format:write && npm run compile",
-    "ci-test": "jest --passWithNoTests",
-    "test": "jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run compile"
+    "generate": "prisma generate && prisma generate --sql",
+    "build": "tsup",
+    "prebuild": "pnpm run generate && pnpm run type-check",
+    "test": "vitest run --silent",
+    "type-check": "tsc --noEmit"
   },
   "type": "module",
   "dependencies": {
