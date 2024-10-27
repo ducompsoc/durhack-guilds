@@ -1,5 +1,5 @@
 import type { DeepPartial } from "@server/types/deep-partial"
-import type { ConfigIn } from "./schema"
+import type { ConfigIn } from "@server/config/schema"
 
 export default {
   origin: "https://megateams.durhack.com",
