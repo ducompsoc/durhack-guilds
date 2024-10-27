@@ -3,9 +3,10 @@ import { getTokenVault } from "@durhack/token-vault"
 
 import { tokenVaultConfig } from "@server/config"
 import { type User, prisma } from "@server/database"
+import { dirname } from "@server/dirname"
 
 function resolveFilePathFromProjectRoot(path_to_resolve: string): string {
-  return path.resolve(path.join(import.meta.dirname, "..", path_to_resolve))
+  return path.resolve(path.join(dirname, "..", path_to_resolve))
 }
 
 export default await getTokenVault<User>({
