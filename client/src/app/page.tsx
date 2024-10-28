@@ -7,7 +7,7 @@ export default function Home() {
       <div className="h-full flex flex-col text-black dark:text-neutral-200 font-semibold justify-center px-6 py-12 lg:px-8">
         <div className="flex flex-row py-4 px-6 items-center justify-center mb-4">
           <Image src="/logo.svg" alt="DurHack Logo" width={64} height={64} />
-          <h1 className="text-4xl font-bold ml-4 font-heading">DURHACK</h1>
+          <h1 className="text-4xl font-bold ml-4 font-heading uppercase">DurHack</h1>
         </div>
         <div className="sm:mx-auto sm:w-full sm:max-w-sm space-y-6">
           <Link
