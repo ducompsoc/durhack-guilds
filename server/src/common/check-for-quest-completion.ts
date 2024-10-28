@@ -1,4 +1,4 @@
-import { type User, prisma, Quest_dependency_mode } from "@server/database"
+import { type User, prisma, QuestDependencyMode } from "@server/database"
 
 export async function checkForQuestCompletion(user: User, challengeIds: number[]) {
   const quests = await prisma.quest.findMany({
@@ -6,11 +6,14 @@ export async function checkForQuestCompletion(user: User, challengeIds: number[]
       challenges: { some: { challengeId: { in: challengeIds } } },
       usersCompleted: { none: { keycloakUserId: user.keycloakUserId } },
     },
-    include: {
+    select: {
+      dependencyMode: true,
+      points: true,
+      questId: true,
       challenges: {
-        include: {
+        select: {
           qrCodes: {
-            include: {
+            select: {
               redeems: { where: { redeemerUserId: user.keycloakUserId } },
             },
           },
@@ -26,7 +29,7 @@ export async function checkForQuestCompletion(user: User, challengeIds: number[]
       if (challengeCompletionCount > 0) completedCount += 1
     }
     const completed =
-      quest.dependencyMode === Quest_dependency_mode.AND
+      quest.dependencyMode === QuestDependencyMode.AND
         ? completedCount === quest.challenges.length
         : completedCount > 0;
 

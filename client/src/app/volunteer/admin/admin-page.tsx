@@ -136,10 +136,9 @@ export function AdminPage() {
               team_name,
               id,
               team_id,
-            },
-            i
+            }
           ) => (
-            <div className="dh-box p-4 mb-4" key={i}>
+            <div className="dh-box p-4 mb-4" key={id}>
               <p className="mb-2">
                 {preferred_name} - {email}
               </p>

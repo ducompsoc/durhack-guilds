@@ -6,7 +6,7 @@ import { z } from "zod"
 import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { NullError } from "@server/common/errors"
 import { UserRole } from "@server/common/model-enums"
-import { QRCodes_category, type QrCode, type User, type Challenge, prisma } from "@server/database"
+import { QRCodesCategory, type QrCode, type User, type Challenge, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
 import SocketManager from "@server/socket"
 import { checkForQuestCompletion } from "@server/common/check-for-quest-completion"
@@ -14,7 +14,7 @@ import { checkForQuestCompletion } from "@server/common/check-for-quest-completi
 class QRCodesHandlers {
   static createQRPayloadSchema = z.object({
     name: z.string(),
-    category: z.nativeEnum(QRCodes_category),
+    category: z.nativeEnum(QRCodesCategory),
     pointsValue: z.number().nonnegative(),
     claimLimit: z.boolean(),
     state: z.boolean(),
@@ -190,15 +190,16 @@ class QRCodesHandlers {
           challenge = qr.challenge;
         }
 
-        await context.point.create({
-          data: {
-            value,
-            originQrCodeId: qr.qrCodeId,
-            redeemerUserId: user.keycloakUserId,
-          },
-        });
-
-        await context.qrCode.update({ data: { payload: uuid() }, where: { payload } });
+        await Promise.all([
+          context.point.create({
+            data: {
+              value,
+              originQrCodeId: qr.qrCodeId,
+              redeemerUserId: user.keycloakUserId,
+            },
+          }),
+          context.qrCode.update({ data: { payload: uuid() }, where: { payload } }),
+        ]);
       });
 
       assert(qr != null);
@@ -267,7 +268,7 @@ class QRCodesHandlers {
   static createChallengePayloadSchema = z.object({
     name: z.string(),
     description: z.string(),
-    category: z.nativeEnum(QRCodes_category),
+    category: z.nativeEnum(QRCodesCategory),
     points: z.number().nonnegative(),
     claimLimit: z.boolean(),
     startTime: z

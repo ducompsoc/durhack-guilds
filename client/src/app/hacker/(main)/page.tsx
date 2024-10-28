@@ -9,7 +9,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
-import { getHackerEmoji, getPositionMedal } from "@/lib/rankEmojis";
+import { getHackerEmoji, getPositionMedal } from "@/lib/rank-emojis";
 import { ButtonModal } from "@/components/button-modal";
 import { useGuildsContext } from "@/hooks/use-guilds-context";
 
@@ -77,7 +77,7 @@ export default function HackerHome() {
         <div className="flex flex-col h-full">
           <p>Hello {user?.preferred_name},</p>
           <div className="flex mt-4">
-            <TeamBox />
+            <TeamBox className="grow basis-0" />
             {hasGuild && (
               <div className="dh-box p-2 text-center grow basis-0 ml-4 flex flex-col">
                 <h2 className="font-semibold mb-2">Guild</h2>

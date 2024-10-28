@@ -5,8 +5,9 @@ import { useState } from "react";
 
 import TeamName from "@/components/team-name";
 import { useGuildsContext } from "@/hooks/use-guilds-context";
+import { cn } from "@/lib/utils";
 
-export function TeamBox({ grow = true }: { grow?: boolean }) {
+export function TeamBox({ className }: { className?: string }) {
   const [showTeamCode, setShowTeamCode] = useState(false);
   const { team } = useGuildsContext()
 
@@ -16,9 +17,7 @@ export function TeamBox({ grow = true }: { grow?: boolean }) {
 
   return (
     <div
-      className={`dh-box p-2 text-center md:min-w-[50%] min-w-[40%] ${
-        grow ? "grow basis-0" : ""
-      }`}
+      className={cn("dh-box p-2 text-center md:min-w-[50%] min-w-[40%]", className)}
     >
       <h2 className="font-semibold mb-2">Team</h2>
       <div className="relative">

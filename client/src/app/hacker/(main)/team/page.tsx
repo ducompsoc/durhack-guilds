@@ -15,7 +15,7 @@ export default function Team() {
   const [error, setError] = useState("");
   const { team, mutateTeam } = useGuildsContext()
 
-  const members: { preferredNames: string; points: number }[] = team?.members ?? [];
+  const members = team?.members ?? [];
   members.sort((a, b) => b.points - a.points);
 
   async function leaveTeam() {
@@ -32,12 +32,12 @@ export default function Team() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <TeamBox grow={false} />
+        <TeamBox />
         <div className="mt-4 dh-box p-2">
           <p className="font-semibold text-center">Team Members</p>
           <div className="grid grid-cols-[auto_auto] my-4 mx-4 gap-y-2 gap-x-2">
-            {members.map(({ preferredNames, points }, i) => (
-              <Fragment key={i}>
+            {members.map(({ preferredNames, points, id }) => (
+              <Fragment key={id}>
                 <div className="flex items-center">
                   <UserIcon className="w-4 h-4 mr-2" />
                   <p>{preferredNames}</p>

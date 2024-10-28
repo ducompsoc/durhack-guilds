@@ -81,6 +81,7 @@ class UserHandlers {
             return {
               preferredNames: memberName,
               points: prisma.point.sumPoints(member.points),
+              id: member.keycloakUserId
             }
           }) || [],
         guild_name: team.area?.guild.guildName || null,

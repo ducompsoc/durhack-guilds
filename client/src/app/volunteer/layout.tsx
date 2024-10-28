@@ -27,32 +27,38 @@ export default function VolunteerLayout({
   const isVolunteer = isAdmin || getIsVolunteer(user)
   if (!isAdmin && !isVolunteer) return redirect("/");
 
+  function getVolunteerTabs() {
+    if (!isVolunteer) return []
+    return [
+      {
+        icon: UserGroupIcon,
+        path: "/volunteer/teams",
+      }
+    ]
+  }
+
+  function getAdminTabs() {
+    if (isAdmin) return []
+    return [
+      {
+        icon: NewspaperIcon,
+        path: "/volunteer/quests",
+      },
+      {
+        icon: ScaleIcon,
+        path: "/volunteer/admin",
+      }
+    ]
+  }
+
   const tabs = [
     { icon: QrCodeIcon, path: "/volunteer" },
     {
       icon: ChartBarIcon,
       path: "/volunteer/leaderboard",
     },
-    ...(isVolunteer
-      ? [
-          {
-            icon: UserGroupIcon,
-            path: "/volunteer/teams",
-          },
-          ...(isAdmin
-            ? [
-                {
-                  icon: NewspaperIcon,
-                  path: "/volunteer/quests",
-                },
-                {
-                  icon: ScaleIcon,
-                  path: "/volunteer/admin",
-                },
-              ]
-            : []),
-        ]
-      : []),
+    ...getVolunteerTabs(),
+    ...getAdminTabs(),
   ];
 
   return <TabbedPage tabs={tabs}>{children}</TabbedPage>;

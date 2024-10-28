@@ -4,7 +4,7 @@ import { z } from "zod"
 import { requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { UserRole } from "@server/common/model-enums"
 import type { Middleware, Request, Response } from "@server/types"
-import { prisma, Quest_dependency_mode } from "@server/database"
+import { prisma, QuestDependencyMode } from "@server/database"
 import { checkForQuestCompletion } from "@server/common/check-for-quest-completion"
 
 class QuestsHandlers {
@@ -87,7 +87,7 @@ class QuestsHandlers {
   static createQuestPayloadSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
-    dependencyMode: z.nativeEnum(Quest_dependency_mode),
+    dependencyMode: z.nativeEnum(QuestDependencyMode),
     points: z.number().nonnegative().optional(),
     challenges: z.array(z.number()),
   })

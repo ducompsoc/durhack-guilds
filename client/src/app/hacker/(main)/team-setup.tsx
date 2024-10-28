@@ -1,28 +1,29 @@
 "use client";
 
 import { ArrowPathRoundedSquareIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { fetchGuildsApi } from "@/lib/api";
-import { abortForRerender } from "@/lib/symbols";
 import { useGuildsContext } from "@/hooks/use-guilds-context";
+import useSWRImmutable from "swr";
 
 export function TeamSetup() {
   const { user, mutateTeam } = useGuildsContext();
-  const [name, setName] = useState<string | null>(null);
+  const {
+    data: { name },
+    mutate: mutateName,
+    isLoading: nameIsLoading,
+  } = useSWRImmutable("/teams/generate-name");
   const [createError, setCreateError] = useState("");
   const [joinError, setJoinError] = useState("");
   const [joinCode, setJoinCode] = useState("");
 
-  async function getTeamName(refresh: boolean, signal?: AbortSignal) {
-    const params = new URLSearchParams();
-    if (refresh) params.set("refresh", "yes");
+  async function refreshTeamName() {
+    const params = new URLSearchParams({ refresh: "yes" });
     try {
-      const { name } = await fetchGuildsApi(`/teams/generate-name?${params}`, { signal });
-      setName(name);
-      setCreateError("");
+      await fetchGuildsApi(`/teams/generate-name?${params}`);
+      mutateName();
     } catch (error) {
-      if (error === abortForRerender) return
       setCreateError("Failed to fetch team name!");
     }
   }
@@ -51,12 +52,6 @@ export function TeamSetup() {
     }
   }
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void getTeamName(false, controller.signal);
-    return () => controller.abort(abortForRerender)
-  }, []);
-
   return (
     <div className="flex flex-col h-full">
       <p>Hello {user?.preferred_name},</p>
@@ -66,10 +61,10 @@ export function TeamSetup() {
           <p>
             Name:
             <br />
-            <em>{name == null ? "..." : name}</em>
+            <em>{nameIsLoading ? "..." : name}</em>
           </p>
           <span className="grow"></span>
-          <button onClick={() => getTeamName(true)}>
+          <button onClick={() => refreshTeamName()}>
             <ArrowPathRoundedSquareIcon className="w-6 h-6" />
           </button>
         </div>

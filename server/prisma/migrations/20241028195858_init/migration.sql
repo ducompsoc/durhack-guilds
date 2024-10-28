@@ -1,10 +1,13 @@
 -- CreateEnum
-CREATE TYPE "QRCodes_category" AS ENUM ('workshop', 'sponsor', 'challenge', 'preset');
+CREATE TYPE "QRCodesCategory" AS ENUM ('workshop', 'sponsor', 'challenge', 'preset');
+
+-- CreateEnum
+CREATE TYPE "QuestDependencyMode" AS ENUM ('AND', 'OR');
 
 -- CreateTable
 CREATE TABLE "Area" (
     "area_id" SERIAL NOT NULL,
-    "megateam_id" INTEGER NOT NULL,
+    "guild_id" INTEGER NOT NULL,
     "area_name" VARCHAR(255) NOT NULL,
     "area_location" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -14,14 +17,14 @@ CREATE TABLE "Area" (
 );
 
 -- CreateTable
-CREATE TABLE "Megateam" (
-    "megateam_id" SERIAL NOT NULL,
-    "megateam_name" VARCHAR(255) NOT NULL,
-    "megateam_description" VARCHAR(255),
+CREATE TABLE "Guild" (
+    "guild_id" SERIAL NOT NULL,
+    "guild_name" VARCHAR(255) NOT NULL,
+    "guild_description" VARCHAR(255),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Megateam_pkey" PRIMARY KEY ("megateam_id")
+    CONSTRAINT "Guild_pkey" PRIMARY KEY ("guild_id")
 );
 
 -- CreateTable
@@ -39,20 +42,48 @@ CREATE TABLE "Point" (
 -- CreateTable
 CREATE TABLE "QrCode" (
     "qr_code_id" SERIAL NOT NULL,
+    "challenge_id" INTEGER,
     "name" VARCHAR(255) NOT NULL,
-    "category" "QRCodes_category" NOT NULL DEFAULT 'workshop',
+    "category" "QRCodesCategory" NOT NULL DEFAULT 'workshop',
     "payload" UUID NOT NULL,
     "points_value" INTEGER NOT NULL,
-    "max_uses" INTEGER,
     "state" BOOLEAN NOT NULL,
-    "start_time" TIMESTAMP(3) NOT NULL,
-    "expiry_time" TIMESTAMP(3) NOT NULL,
     "creator_id" UUID NOT NULL,
-    "challenge_rank" INTEGER,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "claim_limit" BOOLEAN NOT NULL,
+    "is_being_displayed" BOOLEAN NOT NULL DEFAULT false,
+
+    CONSTRAINT "QrCode_pkey" PRIMARY KEY ("qr_code_id")
+);
+
+-- CreateTable
+CREATE TABLE "Challenge" (
+    "challenge_id" SERIAL NOT NULL,
+    "claim_limit" BOOLEAN NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "description" VARCHAR(255) NOT NULL,
+    "points" INTEGER NOT NULL,
+    "start_time" TIMESTAMP(3),
+    "expiry_time" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "category" "QRCodesCategory" NOT NULL,
+
+    CONSTRAINT "Challenge_pkey" PRIMARY KEY ("challenge_id")
+);
+
+-- CreateTable
+CREATE TABLE "Quest" (
+    "quest_id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "description" VARCHAR(255),
+    "dependency_mode" "QuestDependencyMode" NOT NULL DEFAULT 'AND',
+    "points" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "QrCode_pkey" PRIMARY KEY ("qr_code_id")
+    CONSTRAINT "Quest_pkey" PRIMARY KEY ("quest_id")
 );
 
 -- CreateTable
@@ -94,8 +125,32 @@ CREATE TABLE "TokenSet" (
     CONSTRAINT "TokenSet_pkey" PRIMARY KEY ("user_id")
 );
 
+-- CreateTable
+CREATE TABLE "SessionRecord" (
+    "session_record_id" TEXT NOT NULL,
+    "user_id" UUID,
+    "data" JSONB NOT NULL,
+    "expires_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SessionRecord_pkey" PRIMARY KEY ("session_record_id")
+);
+
+-- CreateTable
+CREATE TABLE "_ChallengeToQuest" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "_QuestToUser" (
+    "A" INTEGER NOT NULL,
+    "B" UUID NOT NULL
+);
+
 -- CreateIndex
-CREATE INDEX "Area_megateam_id_idx" ON "Area"("megateam_id");
+CREATE INDEX "Area_guild_id_idx" ON "Area"("guild_id");
 
 -- CreateIndex
 CREATE INDEX "Point_origin_qr_code_id_idx" ON "Point"("origin_qr_code_id");
@@ -104,13 +159,13 @@ CREATE INDEX "Point_origin_qr_code_id_idx" ON "Point"("origin_qr_code_id");
 CREATE INDEX "Point_redeemer_user_id_idx" ON "Point"("redeemer_user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "QrCode_challenge_rank_key" ON "QrCode"("challenge_rank");
-
--- CreateIndex
 CREATE UNIQUE INDEX "QrCode_payload_key" ON "QrCode"("payload");
 
 -- CreateIndex
 CREATE INDEX "QrCode_creator_id_idx" ON "QrCode"("creator_id");
+
+-- CreateIndex
+CREATE INDEX "QrCode_challenge_id_idx" ON "QrCode"("challenge_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Team_join_code_key" ON "Team"("join_code");
@@ -127,8 +182,23 @@ CREATE INDEX "User_team_id_idx" ON "User"("team_id");
 -- CreateIndex
 CREATE INDEX "TokenSet_user_id_idx" ON "TokenSet"("user_id");
 
+-- CreateIndex
+CREATE INDEX "SessionRecord_user_id_idx" ON "SessionRecord"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "_ChallengeToQuest_AB_unique" ON "_ChallengeToQuest"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_ChallengeToQuest_B_index" ON "_ChallengeToQuest"("B");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "_QuestToUser_AB_unique" ON "_QuestToUser"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_QuestToUser_B_index" ON "_QuestToUser"("B");
+
 -- AddForeignKey
-ALTER TABLE "Area" ADD CONSTRAINT "Area_megateam_id_fkey" FOREIGN KEY ("megateam_id") REFERENCES "Megateam"("megateam_id") ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE "Area" ADD CONSTRAINT "Area_guild_id_fkey" FOREIGN KEY ("guild_id") REFERENCES "Guild"("guild_id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Point" ADD CONSTRAINT "Point_origin_qr_code_id_fkey" FOREIGN KEY ("origin_qr_code_id") REFERENCES "QrCode"("qr_code_id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -140,6 +210,9 @@ ALTER TABLE "Point" ADD CONSTRAINT "Point_redeemer_user_id_fkey" FOREIGN KEY ("r
 ALTER TABLE "QrCode" ADD CONSTRAINT "QrCode_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "User"("keycloak_user_id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "QrCode" ADD CONSTRAINT "QrCode_challenge_id_fkey" FOREIGN KEY ("challenge_id") REFERENCES "Challenge"("challenge_id") ON DELETE NO ACTION ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Team" ADD CONSTRAINT "Team_area_id_fkey" FOREIGN KEY ("area_id") REFERENCES "Area"("area_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -147,3 +220,18 @@ ALTER TABLE "User" ADD CONSTRAINT "User_team_id_fkey" FOREIGN KEY ("team_id") RE
 
 -- AddForeignKey
 ALTER TABLE "TokenSet" ADD CONSTRAINT "TokenSet_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("keycloak_user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SessionRecord" ADD CONSTRAINT "SessionRecord_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("keycloak_user_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_ChallengeToQuest" ADD CONSTRAINT "_ChallengeToQuest_A_fkey" FOREIGN KEY ("A") REFERENCES "Challenge"("challenge_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_ChallengeToQuest" ADD CONSTRAINT "_ChallengeToQuest_B_fkey" FOREIGN KEY ("B") REFERENCES "Quest"("quest_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_QuestToUser" ADD CONSTRAINT "_QuestToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Quest"("quest_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_QuestToUser" ADD CONSTRAINT "_QuestToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("keycloak_user_id") ON DELETE CASCADE ON UPDATE CASCADE;

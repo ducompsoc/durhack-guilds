@@ -48,7 +48,7 @@ model QrCode {
   qrCodeId         Int              @id @default(autoincrement()) @map("qr_code_id")
   challengeId      Int?             @map("challenge_id")
   name             String           @db.VarChar(255)
-  category         QRCodes_category @default(workshop)
+  category         QRCodesCategory @default(workshop)
   payload          String           @unique @db.Uuid
   pointsValue      Int              @map("points_value")
   state            Boolean
@@ -77,14 +77,14 @@ model Challenge {
   quests      Quest[]
   createdAt   DateTime         @default(now()) @map("created_at")
   updatedAt   DateTime         @updatedAt @map("updated_at")
-  category    QRCodes_category @default(workshop)
+  category    QRCodesCategory
 }
 
 model Quest {
   questId        Int                   @id @default(autoincrement()) @map("quest_id")
   name           String                @db.VarChar(255)
   description    String?               @db.VarChar(255)
-  dependencyMode Quest_dependency_mode @default(AND)
+  dependencyMode QuestDependencyMode   @default(AND) @map("dependency_mode")
   points         Int                   @default(0)
   challenges     Challenge[]
   createdAt      DateTime              @default(now()) @map("created_at")
@@ -143,21 +143,21 @@ model SessionRecord {
   userId          String?   @map("user_id") @db.Uuid
   user            User?     @relation(fields: [userId], references: [keycloakUserId])
   data            Json
-  expiresAt       DateTime?
+  expiresAt       DateTime? @map("expires_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@index([userId])
 }
 
-enum QRCodes_category {
+enum QRCodesCategory {
   workshop
   sponsor
   challenge
   preset
 }
 
-enum Quest_dependency_mode {
+enum QuestDependencyMode {
   AND
   OR
 }

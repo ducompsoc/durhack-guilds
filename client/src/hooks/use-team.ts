@@ -5,6 +5,7 @@ import { makeGuildsApiRequest } from "@/lib/api";
 type TeamMember = {
   preferredNames: string
   points: number
+  id: string
 }
 
 export type Team = {

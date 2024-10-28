@@ -14,6 +14,7 @@ import { useGuildsContext } from "@/hooks/use-guilds-context";
 import Preset from "./preset";
 import Custom from "./custom";
 import Manage from "./manage";
+import { cn } from "@/lib/utils";
 
 export default function Volunteer() {
   const [current, setCurrent] = useState("Preset");
@@ -35,31 +36,26 @@ export default function Volunteer() {
   const userIsAdmin = user != null && isAdmin(user);
 
   function getClasses(name: string) {
-    let classes = "font-semibold pb-4 px-4 inline-flex items-center border-b-[3px] text-sm";
-    if (name === current) {
-      classes += " border-accent text-accent";
-    } else {
-      classes +=
-        " border-gray-200 text-gray-500 hover:text-accent hover:border-accent dark:border-neutral-400 dark:text-neutral-400";
-    }
-    return classes;
+    return cn(
+      "font-semibold pb-4 px-4 inline-flex items-center border-b-[3px] text-sm",
+      (name === current) && "border-accent text-accent" || "",
+      (name !== current) && "border-gray-200 text-gray-500 hover:text-accent hover:border-accent dark:border-neutral-400 dark:text-neutral-400" || ""
+    );
   }
 
   async function displayQR(id: number, preset = false) {
     if (!(await socketManager.ensureConnected())) return console.error("Failed to get socket");
 
     socketManager.onQRChange((qr: any) => {
-      if (qr) {
-        setQR({
-          name: qr.name,
-          url: qr.redemptionUrl,
-          category: qr.category,
-          preset,
-        });
-        setOpen(true);
-      } else {
-        closeQR();
-      }
+      if (!qr) return closeQR()
+
+      setQR({
+        name: qr.name,
+        url: qr.redemptionUrl,
+        category: qr.category,
+        preset,
+      });
+      setOpen(true);
     });
     socketManager.listenForQR(id);
   }
@@ -69,25 +65,28 @@ export default function Volunteer() {
     setOpen(false);
   }
 
+  function getAdminTabs() {
+    if (!userIsAdmin) return [];
+    return [
+      {
+        name: "Custom",
+        content: <Custom displayQR={displayQR} />,
+      },
+    ];
+  }
+
   const tabs = [
     {
       name: "Preset",
       content: <Preset displayQR={displayQR} />,
     },
-    ...(userIsAdmin
-      ? [
-          {
-            name: "Custom",
-            content: <Custom displayQR={displayQR} />,
-          },
-          // This really isn't useful anymore and a bit broken
-          // {
-          //   name: "Manage",
-          //   content: <Manage displayQR={displayQR} />,
-          // },
-        ]
-      : []),
+    ...getAdminTabs(),
   ];
+
+  function CurrentTab() {
+    const tab = tabs.find((tab) => tab.name === current)
+    return tab && <Fragment key={tab.name}>{tab.content}</Fragment>
+  }
 
   return (
     <>
@@ -100,7 +99,7 @@ export default function Volunteer() {
           ))}
         </nav>
         <div className="mt-4">
-          {tabs.map((tab) => tab.name === current && <Fragment key={tab.name}>{tab.content}</Fragment>)}
+          <CurrentTab />
         </div>
       </div>
       <Transition.Root show={open} as={Fragment}>

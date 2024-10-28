@@ -3,7 +3,7 @@
 import * as React from "react";
 import useSWR from "swr";
 
-import { getPositionMedal } from "@/lib/rankEmojis";
+import { getPositionMedal } from "@/lib/rank-emojis";
 import TeamName from "@/components/team-name";
 import { fetchGuildsApi } from "@/lib/api";
 
