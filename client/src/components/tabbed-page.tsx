@@ -46,7 +46,7 @@ export function TabbedPage({
       <div className="h-full flex flex-col text-black dark:text-neutral-200">
         <div className="flex flex-row py-4 px-6 items-center justify-evenly">
           <img src="/logo.svg" alt="DurHack Logo" className="w-16 h-16" />
-          <h1 className="text-3xl font-heading">DURHACK</h1>
+          <h1 className="text-3xl font-heading uppercase">DurHack</h1>
           <button onClick={() => setOpen(true)}>
             <ArrowRightStartOnRectangleIcon className="w-12 h-12" />
           </button>
