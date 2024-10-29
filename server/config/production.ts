@@ -1,5 +1,7 @@
+import { TokenType } from "@durhack/token-vault/lib"
+
 import type { DeepPartial } from "@server/types/deep-partial"
-import type { ConfigIn } from "./schema"
+import type { ConfigIn } from "@server/config/schema"
 
 export default {
   origin: "https://guilds.durhack.com",
@@ -29,6 +31,14 @@ export default {
   jsonwebtoken: {
     issuer: "https://guilds.durhack.com",
     audience: "https://guilds.durhack.com",
+    authorities: [
+      {
+        for: TokenType.accessToken,
+        algorithm: "eddsa",
+        publicKeyFilePath: "keys/accessToken.pub",
+        privateKeyFilePath: "keys/accessToken.key",
+      }
+    ],
   },
   keycloak: {
     realm: "durhack",

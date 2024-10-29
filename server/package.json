@@ -1,8 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "durhack-guilds-server",
+  "name": "@durhack/guilds-server",
   "description": "Server for DurHack Guilds project",
-  "version": "0.1.0",
   "private": true,
   "author": {
     "name": "Durham University Computing Society",
@@ -22,22 +21,23 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "npx cross-env NODE_ENV=production node ./dist/main.js",
+    "start": "node ./dist/main.js",
     "dev": "tsx ./src/main",
     "dev:watch": "tsx watch ./src/main",
-    "compile": "npx tsc -p tsconfig.json && npx tsc-alias -p tsconfig.json",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "build": "npm run format:write && npm run compile",
-    "ci-test": "jest --passWithNoTests",
-    "test": "jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run compile"
+    "generate": "prisma generate && prisma generate --sql",
+    "build": "tsup",
+    "prebuild": "pnpm run generate && pnpm run type-check",
+    "test": "vitest run --silent",
+    "type-check": "tsc --noEmit"
   },
   "type": "module",
   "dependencies": {
+    "@durhack/guilds-common": "workspace:*",
     "@durhack/token-vault": "^0.1.2",
     "@keycloak/keycloak-admin-client": "^25.0.4",
-    "@otterhttp/app": "^3.4.4",
+    "@otterhttp/app": "^3.4.5",
     "@otterhttp/cookie-signature": "^3.0.0",
     "@otterhttp/csrf-csrf": "^3.3.0",
     "@otterhttp/errors": "^0.2.1",
@@ -45,7 +45,7 @@
     "@otterhttp/session": "^0.3.1",
     "@prisma/client": "^5.19.0",
     "corstisol": "^1.0.0",
-    "cross-env": "^7.0.3",
+    "jose": "^5.9.6",
     "openid-client": "^5.6.5",
     "socket.io": "^4.7.5",
     "unique-names-generator": "^4.7.1",
@@ -58,8 +58,8 @@
     "@types/node": "^22.5.3",
     "@types/uuid": "^10.0.0",
     "prisma": "^5.19.0",
+    "tsup": "^8.3.5",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
-  },
-  "packageManager": "pnpm@9.9.0+sha256.7a4261e50d9a44d9240baf6c9d6e10089dcf0a79d0007f2a26985a6927324177"
+  }
 }

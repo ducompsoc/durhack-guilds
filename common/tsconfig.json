@@ -3,13 +3,13 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "rootDir": "./",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
+    "rootDir": "./src",
     "baseUrl": "./",
+    "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "noEmit": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -17,9 +17,9 @@
     "skipLibCheck": true,
     "newLine": "lf",
     "paths": {
-      "@server/*": ["./src/*"]
+      "@/*": ["./src/*"]
     }
   },
-  "exclude": ["./dist", "./node_modules", "./__tests__"],
-  "include": ["**/*.ts"]
+  "exclude": ["./dist", "./node_modules"],
+  "include": ["src"]
 }

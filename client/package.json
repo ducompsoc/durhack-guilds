@@ -1,7 +1,7 @@
 {
-  "name": "durhack-guilds-server",
+  "$schema": "https://json.schemastore.org/package",
+  "name": "@durhack/guilds-client",
   "description": "Client app for the DurHack Guilds project",
-  "version": "0.1.0",
   "private": true,
   "author": {
     "name": "Durham University Computing Society",
@@ -20,10 +20,11 @@
   "scripts": {
     "dev": "next dev -p 3100",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3100",
     "lint": "next lint"
   },
   "dependencies": {
+    "@durhack/guilds-common": "workspace:*",
     "@formkit/auto-animate": "^0.7.0",
     "@headlessui/react": "^1.7.15",
     "@heroicons/react": "^2.0.18",
@@ -64,6 +65,5 @@
     "eslint": "^8.42.0",
     "eslint-plugin-tsdoc": "^0.2.17",
     "tailwindcss-bg-patterns": "^0.3.0"
-  },
-  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
+  }
 }
