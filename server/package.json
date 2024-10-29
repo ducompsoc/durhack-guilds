@@ -34,6 +34,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@durhack/guilds-common": "workspace:*",
     "@durhack/token-vault": "^0.1.2",
     "@keycloak/keycloak-admin-client": "^25.0.4",
     "@otterhttp/app": "^3.4.5",

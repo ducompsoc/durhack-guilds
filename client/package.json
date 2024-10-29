@@ -24,6 +24,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@durhack/guilds-common": "workspace:*",
     "@formkit/auto-animate": "^0.7.0",
     "@headlessui/react": "^1.7.15",
     "@heroicons/react": "^2.0.18",
