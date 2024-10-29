@@ -9,7 +9,6 @@ export default {
     options: {
       cookieOptions: {
         name: "__Host-durhack-megateams.x-csrf-token",
-        domain: null,
         path: "/",
         secure: true,
         sameSite: "strict",
@@ -19,7 +18,6 @@ export default {
   session: {
     cookie: {
       name: "__Host-durhack-megateams-session",
-      domain: null,
       path: "/",
       secure: true,
       sameSite: "lax",
