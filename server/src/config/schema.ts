@@ -7,10 +7,10 @@ export const listenOptionsSchema = z.object({
 })
 
 export const cookie_options_schema = z.object({
-  sameSite: z.union([z.literal("none"), z.literal("lax"), z.literal("strict")]).optional(),
-  path: z.string().optional(),
+  sameSite: z.union([z.literal("none"), z.literal("lax"), z.literal("strict")]).nullish(),
+  path: z.string().nullish(),
   secure: z.boolean(),
-  domain: z.string().optional(),
+  domain: z.string().nullish(),
 })
 
 export const doubleCsrfOptionsSchema = z.object({
