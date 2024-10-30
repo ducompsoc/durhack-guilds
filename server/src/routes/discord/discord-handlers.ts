@@ -129,7 +129,7 @@ class DiscordHandlers {
         })
         const newChannel: { id: string } = await newChannelRes.json()
         team = await prisma.team.update({
-          where: team,
+          where: { teamId: team.teamId },
           data: {
             discordChannelId: newChannel.id,
           },
