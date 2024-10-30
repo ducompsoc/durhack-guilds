@@ -5,13 +5,13 @@ export default {
   csrf: {
     options: {
       cookieOptions: {
-        domain: "megateams.durhack-dev.com",
+        domain: "guilds.durhack-dev.com",
       },
     },
   },
   session: {
     cookie: {
-      domain: "megateams.durhack-dev.com",
+      domain: "guilds.durhack-dev.com",
     },
   },
 } satisfies DeepPartial<ConfigIn>
