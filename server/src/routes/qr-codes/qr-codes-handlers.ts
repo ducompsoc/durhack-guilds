@@ -56,7 +56,7 @@ class QRCodesHandlers {
     };
   }
 
-  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
+  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor, UserRole.organiser)
   useChallenge(): Middleware {
     return async (request: Request, response: Response) => {
       const { challenge_id } = response.locals;
@@ -134,7 +134,7 @@ class QRCodesHandlers {
     state: z.boolean().optional(),
   });
 
-  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
+  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor, UserRole.organiser)
   patchQRCodeDetails(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
       const { qr_code_id } = response.locals;
@@ -223,7 +223,7 @@ class QRCodesHandlers {
       .optional(),
   });
 
-  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
+  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor, UserRole.organiser)
   getChallengeList(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
       const query = QRCodesHandlers.challengeListQuerySchema.parse(request.query);

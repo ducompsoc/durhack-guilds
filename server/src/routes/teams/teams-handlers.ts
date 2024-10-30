@@ -67,7 +67,7 @@ class TeamsHandlers {
     }
   }
 
-  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer, UserRole.organiser)
   listTeamsAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const result = await prisma.$queryRawTyped(getTeamsWithEverything())
@@ -100,7 +100,7 @@ class TeamsHandlers {
     area_code: z.number(),
   })
 
-  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer, UserRole.organiser)
   patchTeamAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const { team_id } = response.locals

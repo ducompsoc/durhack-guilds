@@ -46,7 +46,6 @@ export const discordOptionsSchema = z.object({
   redirectUri: z.string().url(),
   botToken: z.string(),
   guildID: z.string(),
-  inviteLink: z.string(),
   teamsParentChannel: z.string(),
 })
 

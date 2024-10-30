@@ -7,7 +7,7 @@ import { prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
 
 class AreaHandlers {
-  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer, UserRole.organiser)
   getAreasList(): Middleware {
     return async (_request: Request, response: Response): Promise<void> => {
       const result = await prisma.guild.findMany({

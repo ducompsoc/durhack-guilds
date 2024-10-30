@@ -3,6 +3,7 @@ export enum UserRole {
   sponsor = "/sponsors",
   volunteer = "/volunteers",
   admin = "/admins",
+  organiser = "/organisers",
 }
 
 export enum Ethnicity {
