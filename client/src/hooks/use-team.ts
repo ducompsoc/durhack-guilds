@@ -1,21 +1,22 @@
 import useSWR from "swr";
 
-import { makeMegateamsApiRequest } from "@/lib/api";
+import { makeGuildsApiRequest } from "@/lib/api";
 
-type TeamMember = {
+export type TeamMember = {
   preferredNames: string
   points: number
+  id: string
 }
 
 export type Team = {
   name: string
-  megateam_name: string
+  guild_name: string
   join_code: string
   members: TeamMember[]
 }
 
 async function teamFetcher(url: string): Promise<Team | null> {
-  const request = await makeMegateamsApiRequest(url);
+  const request = await makeGuildsApiRequest(url);
   const response = await fetch(request);
 
   if (response.status === 401) return null

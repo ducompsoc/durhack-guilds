@@ -10,12 +10,14 @@ import {
   uniqueNamesGenerator,
 } from "unique-names-generator"
 import { z } from "zod"
+import type { Team } from "@durhack/guilds-common/types/index"
 
 import { getSession } from "@server/auth/session"
 import { decodeTeamJoinCode } from "@server/common/decode-team-join-code"
-import { requireLoggedIn, requireUserIsAdmin } from "@server/common/decorators"
-import { type Team, prisma } from "@server/database"
+import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
+import { type Team as PrismaTeam, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
+import { UserRole } from "@server/common/model-enums"
 
 class TeamsHandlers {
   static join_code_schema = z
@@ -65,7 +67,7 @@ class TeamsHandlers {
     }
   }
 
-  @requireUserIsAdmin()
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   listTeamsAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const result = await prisma.$queryRawTyped(getTeamsWithEverything())
@@ -79,9 +81,9 @@ class TeamsHandlers {
         area: {
           area_id: team.areaId,
           area_name: team.areaName,
-          megateam: {
-            megateam_id: team.megateamId,
-            megateam_name: team.megateamName,
+          guild: {
+            guild_id: team.guildId,
+            guild_name: team.guildName,
           },
         },
       }))
@@ -89,7 +91,7 @@ class TeamsHandlers {
       response.json({
         status: 200,
         message: "OK",
-        teams: payload,
+        teams: payload satisfies Team[],
       })
     }
   }
@@ -98,7 +100,7 @@ class TeamsHandlers {
     area_code: z.number(),
   })
 
-  @requireUserIsAdmin()
+  @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   patchTeamAsAdmin(): Middleware {
     return async (request: Request, response: Response) => {
       const { team_id } = response.locals
@@ -148,7 +150,7 @@ class TeamsHandlers {
       const randomValues = getRandomValues(randomBuffer) // Fill the buffer with random values
       let randomValue = randomValues[0]
 
-      let createdTeam: Team | null = null
+      let createdTeam: PrismaTeam | null = null
       let tryIndex = 0
       while (tryIndex < 10) {
         try {

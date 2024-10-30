@@ -16,10 +16,10 @@ class UserHandlers {
       const payload = {
         id: request.user.keycloakUserId,
         email: request.userProfile.email,
-        preferred_name: request.userProfile.preferred_name,
+        preferred_name: request.userProfile.preferred_names ?? request.userProfile.first_names,
         roles: request.userProfile.groups,
         points: await prisma.user.getTotalPoints({
-          where: request.user,
+          where: { keycloakUserId: request.user.keycloakUserId },
         }),
       }
 
@@ -34,7 +34,7 @@ class UserHandlers {
       const parsed_payload = patchUserPayloadSchema.parse(request.body)
 
       await prisma.user.update({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         data: parsed_payload,
       })
 
@@ -49,12 +49,12 @@ class UserHandlers {
       assert(request.userProfile)
 
       const user = await prisma.user.findUnique({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         include: {
           team: {
             include: {
               members: { include: { points: true } },
-              area: { include: { megateam: true } },
+              area: { include: { guild: true } },
             },
           },
         },
@@ -76,13 +76,15 @@ class UserHandlers {
         members:
           team.members.map((member, index) => {
             const memberProfile = teamMemberProfiles[index]
-            const memberName = memberProfile?.attributes?.preferredNames?.[0]
+            const memberName =
+              memberProfile?.attributes?.preferredNames?.[0] ?? memberProfile?.attributes?.firstNames?.[0];
             return {
               preferredNames: memberName,
               points: prisma.point.sumPoints(member.points),
+              id: member.keycloakUserId
             }
           }) || [],
-        megateam_name: team.area?.megateam.megateamName || null,
+        guild_name: team.area?.guild.guildName || null,
         join_code: team.joinCodeString,
       }
 
@@ -107,7 +109,7 @@ class UserHandlers {
       assert(request.user)
 
       const user = await prisma.user.findUnique({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         include: { team: true },
       })
       assert(user)
@@ -130,7 +132,7 @@ class UserHandlers {
       }
 
       await prisma.user.update({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         data: {
           team: {
             connect: { teamId: team.teamId },
@@ -149,7 +151,7 @@ class UserHandlers {
     return async (request, response) => {
       assert(request.user)
       const user = await prisma.user.findUnique({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         include: { team: true },
       })
 
@@ -160,7 +162,7 @@ class UserHandlers {
       }
 
       await prisma.user.update({
-        where: request.user,
+        where: { keycloakUserId: request.user.keycloakUserId },
         data: { teamId: null },
       })
 

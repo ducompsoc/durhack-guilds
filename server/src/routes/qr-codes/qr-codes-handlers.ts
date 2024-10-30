@@ -1,72 +1,49 @@
 import assert from "node:assert/strict"
-import { ClientError, HttpStatus, ServerError } from "@otterhttp/errors"
+import { ClientError, HttpStatus } from "@otterhttp/errors"
 import { v7 as uuid } from "uuid"
 import { z } from "zod"
 
 import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { NullError } from "@server/common/errors"
-import { QRCategory, UserRole } from "@server/common/model-enums"
-import { megateamsConfig } from "@server/config"
-import { type QrCode, type User, prisma } from "@server/database"
+import { UserRole } from "@server/common/model-enums"
+import { QRCodesCategory, type QrCode, type User, type Challenge, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
-
-const presets = new Map(Object.entries(megateamsConfig.QRPresets))
+import SocketManager from "@server/socket"
+import { checkForQuestCompletion } from "@server/common/check-for-quest-completion"
 
 class QRCodesHandlers {
   static createQRPayloadSchema = z.object({
     name: z.string(),
-    category: z.nativeEnum(QRCategory),
+    category: z.nativeEnum(QRCodesCategory),
     pointsValue: z.number().nonnegative(),
-    maxUses: z.number().nonnegative(),
+    claimLimit: z.boolean(),
     state: z.boolean(),
-    startTime: z.date().or(
-      z
-        .string()
-        .datetime()
-        .transform((val) => new Date(val)),
-    ),
-    expiryTime: z.date().or(
-      z
-        .string()
-        .datetime()
-        .transform((val) => new Date(val)),
-    ),
-    publicised: z.boolean(),
-  })
+    challengeId: z.number().optional(),
+  });
 
   private async buildAndSaveQRCodeFromCreateAttributes(
     creator: User,
-    create_attributes: Omit<z.infer<typeof QRCodesHandlers.createQRPayloadSchema>, "publicised">,
-    publicised: boolean,
+    create_attributes: z.infer<typeof QRCodesHandlers.createQRPayloadSchema>
   ) {
-    const publicisedFields = await this.getPublicisedFields(null, publicised)
-
-    const payload = uuid()
+    const payload = uuid();
 
     return await prisma.qrCode.create({
       data: {
         payload: payload,
         creatorUserId: creator.keycloakUserId,
         ...create_attributes,
-        ...publicisedFields,
       },
-    })
+    });
   }
-
-  static createQRCodePayloadSchema = z.object({})
 
   @requireUserIsAdmin()
   createQRCode(): Middleware {
     return async (request: Request, response: Response) => {
-      const { publicised, ...create_attributes } = QRCodesHandlers.createQRPayloadSchema.parse(request.body)
+      const create_attributes = QRCodesHandlers.createQRPayloadSchema.parse(request.body);
 
-      const new_instance = await this.buildAndSaveQRCodeFromCreateAttributes(
-        request.user as User,
-        create_attributes,
-        publicised,
-      )
+      const new_instance = await this.buildAndSaveQRCodeFromCreateAttributes(request.user as User, create_attributes);
 
-      response.status(200)
+      response.status(200);
       response.json({
         status: response.statusCode,
         message: "OK",
@@ -75,55 +52,50 @@ class QRCodesHandlers {
           // todo: check prisma extension properties are not enumerable
           redemption_url: new_instance.redemptionUrl,
         },
-      })
-    }
+      });
+    };
   }
 
-  static usePresetPayloadSchema = z.object({
-    name: z.string(),
-    publicised: z.boolean(),
-  })
-
   @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
-  usePreset(): Middleware {
+  useChallenge(): Middleware {
     return async (request: Request, response: Response) => {
-      const preset_id: string = request.params.preset_id
-      const { name, publicised } = QRCodesHandlers.usePresetPayloadSchema.parse(request.body)
+      const { challenge_id } = response.locals;
+      if (typeof challenge_id !== "number") throw new Error("Parsed `challenge_id` not found.");
 
-      if (!preset_id || !presets.has(preset_id) || !name) {
-        throw new ClientError("", { statusCode: HttpStatus.NotFound, expected: true })
+      const user = request.user;
+      assert(user != null);
+
+      const challenge = await prisma.challenge.findUnique({ where: { challengeId: challenge_id } });
+      if (challenge == null) {
+        throw new ClientError("", { statusCode: HttpStatus.NotFound, expected: true });
       }
-      const preset = presets.get(preset_id)
-      assert(preset)
 
-      const expiry = new Date()
-      expiry.setMinutes(expiry.getMinutes() + preset.minutesValid)
       const create_attributes = {
-        name: name,
-        pointsValue: preset.points,
-        maxUses: preset.uses,
-        category: QRCategory.preset,
+        name: challenge.name,
+        pointsValue: challenge.points,
+        claimLimit: challenge.claimLimit,
+        category: challenge.category,
         state: true,
-        startTime: new Date(),
-        expiryTime: expiry,
+        challengeId: challenge_id,
+      };
+
+      let qr_code = await prisma.qrCode.findFirst({
+        where: { challengeId: challenge_id, creatorUserId: user.keycloakUserId },
+      });
+      if (qr_code == null) {
+        qr_code = await this.buildAndSaveQRCodeFromCreateAttributes(request.user as User, create_attributes);
       }
 
-      const new_instance = await this.buildAndSaveQRCodeFromCreateAttributes(
-        request.user as User,
-        create_attributes,
-        publicised,
-      )
-
-      response.status(200)
+      response.status(200);
       response.json({
         status: response.statusCode,
         message: "OK",
         data: {
-          ...new_instance,
-          redemption_url: new_instance.redemptionUrl,
+          ...qr_code,
+          redemption_url: qr_code.redemptionUrl,
         },
-      })
-    }
+      });
+    };
   }
 
   @requireUserIsAdmin()
@@ -133,263 +105,198 @@ class QRCodesHandlers {
       const result = await prisma.qrCode.findMany({
         include: { redeems: true, creator: true },
         orderBy: { createdAt: "desc" },
-      })
+      });
 
       const payload = result.map((code) => ({
         id: code.qrCodeId,
         name: code.name,
         category: code.category,
         scans: code.redeems.length,
-        max_scans: code.maxUses,
+        claim_limit: code.claimLimit,
         // todo: this used to be a preferred name
         creator: code.creator.keycloakUserId,
         value: code.pointsValue,
-        start: code.startTime,
-        end: code.expiryTime,
         enabled: code.state,
         uuid: code.payload,
-        publicised: code.challengeRank !== null,
         redemption_url: code.redemptionUrl,
-      }))
+      }));
 
-      response.status(200)
+      response.status(200);
       response.json({
         status: 200,
         message: "OK",
         codes: payload,
-      })
-    }
-  }
-
-  private async getPublicisedFields(existing_rank: number | null, publicised: boolean) {
-    if (!publicised) return { challenge_rank: null }
-    if (existing_rank != null) return { challenge_rank: existing_rank }
-
-    const maxRankResult = await prisma.qrCode.aggregate({
-      _max: {
-        challengeRank: true,
-      },
-    })
-    const maxRank = maxRankResult._max.challengeRank
-    return { challenge_rank: (maxRank ?? 0) + 1 }
+      });
+    };
   }
 
   static patchQRCodeDetailsPayloadSchema = z.object({
     state: z.boolean().optional(),
-    publicised: z.boolean().optional(),
-  })
+  });
 
   @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
   patchQRCodeDetails(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
-      const { qr_code_id } = response.locals
-      if (typeof qr_code_id !== "number") throw new Error("Parsed `qr_code_id` not found.")
+      const { qr_code_id } = response.locals;
+      if (typeof qr_code_id !== "number") throw new Error("Parsed `qr_code_id` not found.");
 
-      const { state, publicised } = QRCodesHandlers.patchQRCodeDetailsPayloadSchema.parse(request.body)
+      const { state } = QRCodesHandlers.patchQRCodeDetailsPayloadSchema.parse(request.body);
 
       const found_code = await prisma.qrCode.findUnique({
         where: { qrCodeId: qr_code_id },
-      })
-      if (found_code == null) throw new NullError()
-
-      let fields: { challenge_rank: number | null } | undefined
-
-      if (publicised != null) {
-        fields = await this.getPublicisedFields(found_code.challengeRank, publicised)
-      }
+      });
+      if (found_code == null) throw new NullError();
 
       await prisma.qrCode.update({
         where: { qrCodeId: qr_code_id },
-        data: {
-          state,
-          ...fields,
-        },
-      })
+        data: { state },
+      });
 
-      response.status(200)
+      response.status(200);
       response.json({
         status: response.statusCode,
         message: "OK",
         data: found_code,
-      })
-    }
-  }
-
-  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
-  getPresetsList(): Middleware {
-    return (_request: Request, response: Response) => {
-      response.status(200)
-      response.json({
-        status: 200,
-        message: "OK",
-        presets: Object.fromEntries(presets),
-      })
-    }
-  }
-
-  @requireUserIsAdmin()
-  createPreset(): Middleware {
-    return (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
-  }
-
-  @requireUserIsAdmin()
-  getPresetDetails(): Middleware {
-    return (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
-  }
-
-  @requireUserIsAdmin()
-  deletePreset(): Middleware {
-    return (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
+      });
+    };
   }
 
   static redeemQRPayloadSchema = z.object({
     uuid: z.string().uuid(),
-  })
+  });
 
   @requireLoggedIn()
   redeemQR(): Middleware {
     return async (request: Request, response: Response) => {
-      const { uuid } = QRCodesHandlers.redeemQRPayloadSchema.parse(request.body)
-      const user = request.user
-      assert(user != null)
+      const { uuid: payload } = QRCodesHandlers.redeemQRPayloadSchema.parse(request.body);
+      const user = request.user;
+      assert(user != null);
 
-      let qr = null as QrCode | null
+      let qr = null as QrCode | null;
+      let challenge = null as Challenge | null;
       await prisma.$transaction(async (context) => {
         qr = await context.qrCode.findUnique({
-          where: { payload: uuid },
-          include: { redeems: true },
-        })
-        if (qr == null) throw new ClientError()
+          where: { payload },
+          include: { challenge: true },
+        });
+        if (qr == null) throw new ClientError();
 
-        const qrCanBeRedeemed = await qr.canBeRedeemed(user)
-        if (!qrCanBeRedeemed) throw new ClientError()
+        const qrCanBeRedeemed = await qr.canBeRedeemedByUser(user);
+        if (!qrCanBeRedeemed) throw new ClientError();
 
-        await context.point.create({
-          data: {
-            value: qr.pointsValue,
-            originQrCodeId: qr.qrCodeId,
-            redeemerUserId: user.keycloakUserId,
-          },
-        })
-      })
+        let value = qr.pointsValue;
+        if (qr.challenge != null) {
+          value = qr.challenge.points;
+          challenge = qr.challenge;
+        }
 
-      assert(qr != null)
+        await Promise.all([
+          context.point.create({
+            data: {
+              value,
+              originQrCodeId: qr.qrCodeId,
+              redeemerUserId: user.keycloakUserId,
+            },
+          }),
+          context.qrCode.update({ data: { payload: uuid() }, where: { payload } }),
+        ]);
+      });
+
+      assert(qr != null);
+      await SocketManager.emitQR(qr.qrCodeId);
+
+      if (challenge != null) await checkForQuestCompletion(user, [challenge.challengeId]);
 
       response.json({
         status: 200,
         message: "OK",
         points: qr.pointsValue,
-      })
-    }
+      });
+    };
   }
 
-  private async getChallengeList(_request: Request, response: Response, includeId: boolean) {
-    const now = new Date()
-    const challenges = await prisma.qrCode.findMany({
-      where: {
-        challengeRank: { not: null },
-        state: true,
-        startTime: { lt: now },
-        expiryTime: { gt: now },
-      },
-      orderBy: {
-        challengeRank: "asc",
-      },
-    })
+  static challengeListQuerySchema = z.object({
+    noFilter: z
+      .string()
+      .refine((value) => value === "true" || value === "false")
+      .transform((value) => value === "true")
+      .optional(),
+  });
 
-    const data = challenges.map((challenge, i) => {
-      const challengeRepresentation: {
-        title: string
-        points: number
-        rank: number
-        id?: number
-      } = {
-        title: challenge.name,
-        points: challenge.pointsValue,
-        rank: i,
-      }
-      if (includeId) challengeRepresentation.id = challenge.qrCodeId
-      return challengeRepresentation
-    })
+  @requireUserHasOne(UserRole.admin, UserRole.volunteer, UserRole.sponsor)
+  getChallengeList(): Middleware {
+    return async (request: Request, response: Response): Promise<void> => {
+      const query = QRCodesHandlers.challengeListQuerySchema.parse(request.query);
+      const now = new Date();
+      // todo: this needs to be paginated
+      const result = await prisma.challenge.findMany({
+        ...(query.noFilter
+          ? {}
+          : {
+              where: {
+                OR: [
+                  { startTime: { lt: now }, expiryTime: { gt: now } },
+                  { startTime: { lt: now }, expiryTime: null },
+                  { startTime: null, expiryTime: { gt: now } },
+                  { startTime: null, expiryTime: null },
+                ],
+              },
+            }),
+        orderBy: { expiryTime: "asc" },
+      });
 
-    response.json({
-      status: 200,
-      message: "OK",
-      challenges: data,
-    })
-  }
+      const payload = result.map((challenge) => ({
+        id: challenge.challengeId,
+        name: challenge.name,
+        category: challenge.category,
+        claim_limit: challenge.claimLimit,
+        value: challenge.points,
+        description: challenge.description,
+        start_time: challenge.startTime,
+        expiry_time: challenge.expiryTime,
+      }));
 
-  @requireUserIsAdmin()
-  getChallengeListAdmin(): Middleware {
-    return async (request: Request, response: Response) => {
-      await this.getChallengeList(request, response, true)
-    }
-  }
-
-  getChallengeListAsAnonymous(): Middleware {
-    return async (request: Request, response: Response) => {
-      await this.getChallengeList(request, response, false)
-    }
-  }
-
-  static reorderChallengeListPayloadSchema = z.object({
-    challenges: z.array(
-      z.object({
-        id: z.number(),
-        rank: z.number(),
-      }),
-    ),
-  })
-
-  @requireUserIsAdmin()
-  reorderChallengeList(): Middleware {
-    return async (request: Request, response: Response) => {
-      const { challenges } = QRCodesHandlers.reorderChallengeListPayloadSchema.parse(request.body)
-
-      await prisma.$transaction([
-        prisma.qrCode.updateMany({
-          data: { challengeRank: null },
-        }),
-        ...challenges.map((challenge) => {
-          return prisma.qrCode.update({
-            where: { qrCodeId: challenge.id },
-            data: { challengeRank: challenge.rank },
-          })
-        }),
-      ])
-
+      response.status(200);
       response.json({
         status: 200,
         message: "OK",
-      })
-    }
+        challenges: payload,
+      });
+    };
   }
+
+  static createChallengePayloadSchema = z.object({
+    name: z.string(),
+    description: z.string(),
+    category: z.nativeEnum(QRCodesCategory),
+    points: z.number().nonnegative(),
+    claimLimit: z.boolean(),
+    startTime: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)))
+      .nullable(),
+    expiryTime: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)))
+      .nullable(),
+  });
 
   @requireUserIsAdmin()
   createChallenge(): Middleware {
     return async (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
-  }
+      const create_attributes = QRCodesHandlers.createChallengePayloadSchema.parse(request.body);
 
-  @requireUserIsAdmin()
-  getQRCodeDetails(): Middleware {
-    return async (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
-  }
+      const new_instance = await prisma.challenge.create({ data: create_attributes });
 
-  @requireUserIsAdmin()
-  deleteQRCode(): Middleware {
-    return async (request: Request, response: Response) => {
-      throw new ServerError("", { statusCode: HttpStatus.NotImplemented, expected: true })
-    }
+      response.status(200);
+      response.json({
+        status: response.statusCode,
+        message: "OK",
+        data: {
+          ...new_instance,
+        },
+      });
+    };
   }
 }
 

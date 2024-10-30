@@ -20,8 +20,3 @@ authApp
   .route("/socket-token")
   .all(methodNotAllowed(["GET"]))
   .get(authHandlers.handleGetSocketToken(), handleFailedAuthentication)
-
-authApp
-  .route("/logout")
-  .all(methodNotAllowed(["POST"]))
-  .post(authHandlers.handleLogout())

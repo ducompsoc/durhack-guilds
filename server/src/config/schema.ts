@@ -29,14 +29,6 @@ export const sessionOptionsSchema = z.object({
   }),
 })
 
-export const qrPresetSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  points: z.number().nonnegative(),
-  uses: z.number().nonnegative(),
-  minutesValid: z.number().nonnegative(),
-})
-
 export const keycloakOptionsSchema = z.object({
   realm: z.string(),
   baseUrl: z.string().url(),
@@ -70,9 +62,8 @@ export const configSchema = z.object({
   cookieSigning: cookieSigningOptionsSchema,
   jsonwebtoken: tokenVaultOptionsSchema,
   session: sessionOptionsSchema,
-  megateams: z.object({
+  guilds: z.object({
     maxTeamMembers: z.number().positive(),
-    QRPresets: z.object({}).catchall(qrPresetSchema),
   }),
   discord: discordOptionsSchema,
   keycloak: keycloakOptionsSchema,

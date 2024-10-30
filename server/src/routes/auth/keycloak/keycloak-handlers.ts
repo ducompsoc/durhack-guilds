@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "@otterhttp/app"
+import type { NextFunction, Request as OtterRequest } from "@otterhttp/app"
 import { ClientError } from "@otterhttp/errors"
 import { type Client, generators } from "openid-client"
 
@@ -7,7 +7,7 @@ import { keycloakClient } from "@server/auth/keycloak-client"
 import { getSession } from "@server/auth/session"
 import { origin } from "@server/config"
 import { type User, prisma } from "@server/database"
-import type { Middleware } from "@server/types"
+import type { Middleware, Request, Response } from "@server/types"
 
 export class KeycloakHandlers {
   client: Client
@@ -44,7 +44,7 @@ export class KeycloakHandlers {
   static redirectUri = new URL("/api/auth/keycloak/callback", origin).toString()
 
   oauth2FlowCallback(): Middleware {
-    return async (request: Request & { user?: User }, response: Response, next: NextFunction) => {
+    return async (request: OtterRequest & { user?: User }, response: Response, next: NextFunction) => {
       const session = await getSession(request, response)
       let codeVerifier: unknown
       try {
@@ -95,6 +95,29 @@ export class KeycloakHandlers {
       request.user = user
 
       next()
+    }
+  }
+
+  logout(): Middleware {
+    return async (request: Request, response: Response) => {
+      const session = await getSession(request, response)
+      if (session.userId == null) {
+        await response.redirect(origin)
+        return
+      }
+
+      session.userId = undefined
+      await session.commit()
+      if (request.user?.tokenSet?.idToken) {
+        const endSessionUrl = keycloakClient.endSessionUrl({
+          id_token_hint: request.user?.tokenSet?.idToken,
+          post_logout_redirect_uri: origin,
+        })
+        response.redirect(endSessionUrl)
+        return
+      }
+
+      response.redirect(origin)
     }
   }
 }

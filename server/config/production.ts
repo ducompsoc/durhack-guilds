@@ -4,11 +4,11 @@ import type { DeepPartial } from "@server/types/deep-partial"
 import type { ConfigIn } from "@server/config/schema"
 
 export default {
-  origin: "https://megateams.durhack.com",
+  origin: "https://guilds.durhack.com",
   csrf: {
     options: {
       cookieOptions: {
-        name: "__Host-durhack-megateams.x-csrf-token",
+        name: "__Host-durhack-guilds.x-csrf-token",
         path: "/",
         secure: true,
         sameSite: "strict",
@@ -17,18 +17,18 @@ export default {
   },
   session: {
     cookie: {
-      name: "__Host-durhack-megateams-session",
+      name: "__Host-durhack-guilds-session",
       path: "/",
       secure: true,
       sameSite: "lax",
     },
   },
   discord: {
-    redirectUri: "https://megateams.durhack.com/api/discord/redirect",
+    redirectUri: "https://guilds.durhack.com/api/discord/redirect",
   },
   jsonwebtoken: {
-    issuer: "https://megateams.durhack.com",
-    audience: "https://megateams.durhack.com",
+    issuer: "https://guilds.durhack.com",
+    audience: "https://guilds.durhack.com",
     authorities: [
       {
         for: TokenType.accessToken,
@@ -40,6 +40,6 @@ export default {
   },
   keycloak: {
     realm: "durhack",
-    redirectUris: ["https://megateams.durhack.com/api/auth/keycloak/redirect"],
+    redirectUris: ["https://guilds.durhack.com/api/auth/keycloak/redirect"],
   }
 } satisfies DeepPartial<ConfigIn>

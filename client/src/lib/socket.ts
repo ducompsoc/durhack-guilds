@@ -1,15 +1,18 @@
 "use client";
 
 import { io, type Socket } from "socket.io-client";
+import type { QR } from "@durhack/guilds-common/types/index";
 
-import { fetchMegateamsApi } from "./api";
+import { fetchGuildsApi } from "./api";
 
 class SocketManager {
   private socket: Socket;
   private authenticated = false;
+  private qrCallback?: (qr: QR) => void;
 
   constructor() {
     this.socket = io();
+    this.socket.on("qr", this.qrChange.bind(this));
   }
 
   private emitAsync(ev: string, ...args: any[]) {
@@ -28,10 +31,27 @@ class SocketManager {
 
   async authenticateSocket() {
     if (this.authenticated) return true;
-    const token = await fetchMegateamsApi("/auth/socket-token");
+    const token = await fetchGuildsApi("/auth/socket-token");
     const res = await this.emitAsync("authenticate", token.token);
     this.authenticated = res as boolean;
     return res;
+  }
+
+  async listenForQR(id: number) {
+    this.socket.emit("qr", id);
+  }
+
+  stopListeningForQR() {
+    this.socket.emit("end_listen");
+    this.qrCallback = undefined;
+  }
+
+  onQRChange(cb: (qr: QR) => void) {
+    this.qrCallback = cb;
+  }
+
+  qrChange(qr: QR) {
+    if (this.qrCallback !== undefined) this.qrCallback(qr);
   }
 }
 

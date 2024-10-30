@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "megateams-client",
+      name: "guilds-client",
       script: "npm start",
       cwd: "./client",
       env: {
@@ -9,7 +9,7 @@ module.exports = {
       }
     },
     {
-      name: "megateams-api",
+      name: "guilds-api",
       script: "./dist/main.js",
       cwd: "./server",
       node_args: ["--experimental-specifier-resolution=node"],

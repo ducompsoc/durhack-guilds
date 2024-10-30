@@ -6,20 +6,20 @@ SELECT
   SUM(point.value) AS "points",
   area.area_id as "areaId",
   area.area_name as "areaName",
-  megateam.megateam_id as "megateamId",
-  megateam.megateam_name as "megateamName"
+  guild.guild_id as "guildId",
+  guild.guild_name as "guildName"
 FROM "Team" team
 LEFT JOIN "User" member ON team.team_id = member.team_id
 LEFT JOIN "Point" point ON member.keycloak_user_id = point.redeemer_user_id
 LEFT JOIN "Area" area on team.area_id = area.area_id
-LEFT JOIN "Megateam" megateam on area.megateam_id = megateam.megateam_id
+LEFT JOIN "Guild" guild on area.guild_id = guild.guild_id
 GROUP BY
   team.team_id,
   team.team_name,
   team.join_code,
   area.area_id,
   area.area_name,
-  megateam.megateam_id,
-  megateam.megateam_name
+  guild.guild_id,
+  guild.guild_name
 ORDER BY points DESC
 

@@ -61,8 +61,8 @@ class UsersHandlers {
       const query = UsersHandlers.usersListAdminQuerySchema.parse(request.query)
       const adminClient = await getKeycloakAdminClient()
       const [users, totalCount] = await Promise.all([
-        adminClient.users.find({ first: query.first, max: query.count, q: query.query }),
-        adminClient.users.count({ q: query.query }),
+        adminClient.users.find({ first: query.first, max: query.count, search: query.query }),
+        adminClient.users.count({ search: query.query }),
       ])
 
       const databaseUsers = await Promise.all(
@@ -74,7 +74,7 @@ class UsersHandlers {
               team: {
                 include: {
                   area: {
-                    include: { megateam: true },
+                    include: { guild: true },
                   },
                 },
               },
@@ -89,11 +89,11 @@ class UsersHandlers {
         return {
           id: user.id,
           email: user.email,
-          preferred_name: user.attributes?.preferredNames?.[0],
+          preferred_name: user.attributes?.preferredNames?.[0] ?? user.attributes?.firstNames?.[0],
           points: prisma.point.sumPoints(databaseUser?.points ?? []),
           team_name: databaseUser?.team?.teamName ?? null,
           team_id: databaseUser?.team?.teamId ?? null,
-          megateam_name: databaseUser?.team?.area?.megateam?.megateamName ?? null,
+          guild_name: databaseUser?.team?.area?.guild?.guildName ?? null,
         }
       })
 

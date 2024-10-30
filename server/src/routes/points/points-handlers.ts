@@ -13,7 +13,7 @@ const createPointPayloadSchema = z.object({
   redeemerUserId: z.string().uuid(),
 })
 
-const patchPointPaylodSchema = z
+const patchPointPayloadSchema = z
   .object({
     value: z.number().positive().optional(),
     origin_qrcode_id: z.number().positive().optional(),
@@ -65,12 +65,24 @@ class PointHandlers {
         })
       }
 
-      const new_instance = await prisma.point.create({
-        data: parsedPayload,
+      const adminClient = await getKeycloakAdminClient()
+      const userProfile = await adminClient.users.findOne({ id: parsedPayload.redeemerUserId })
+
+      if (userProfile == null) {
+        throw new ClientError(`User ID ${parsedPayload.redeemerUserId} does not correspond to a keycloak user.`, {
+          statusCode: HttpStatus.UnprocessableEntity,
+          expected: true,
+        })
+      }
+
+      await prisma.user.upsert({
+        where: { keycloakUserId: parsedPayload.redeemerUserId },
+        create: { keycloakUserId: parsedPayload.redeemerUserId, points: { create: parsedPayload } },
+        update: { points: { create: parsedPayload } },
       })
 
       response.status(200)
-      response.json({ status: response.statusCode, message: "OK", data: new_instance })
+      response.json({ status: response.statusCode, message: "OK" })
     }
   }
 
@@ -91,8 +103,6 @@ class PointHandlers {
               qrCodeId: true,
               name: true,
               category: true,
-              startTime: true,
-              expiryTime: true,
             },
           },
           redeemerUser: {
@@ -112,7 +122,7 @@ class PointHandlers {
         redeemerUser: {
           ...result.redeemerUser,
           email: userProfile?.email,
-          preferred_name: userProfile?.attributes?.preferredNames?.[0],
+          preferred_name: userProfile?.attributes?.preferredNames?.[0] ?? userProfile?.attributes?.firstNames?.[0],
         },
       }
 
@@ -130,7 +140,7 @@ class PointHandlers {
       const { point_id } = response.locals
       if (typeof point_id !== "number") throw new Error("Parsed `point_id` not found.")
 
-      const parsed_payload = patchPointPaylodSchema.parse(request.body)
+      const parsed_payload = patchPointPayloadSchema.parse(request.body)
 
       const point = await prisma.point.update({
         where: { pointId: point_id },
