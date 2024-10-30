@@ -1,22 +1,23 @@
+const instanceName = process.env.INSTANCE_NAME;
+if (!instanceName) throw new Error("INSTANCE_NAME is undefined")
+
 module.exports = {
   apps: [
     {
-      name: "guilds-client",
-      script: "npm start",
+      name: `${instanceName}-client`,
+      script: "pnpm start",
       cwd: "./client",
       env: {
-        NODE_ENV: "production"
-      }
+        NODE_ENV: "production",
+      },
     },
     {
-      name: "guilds-api",
+      name: `${instanceName}-server`,
       script: "./dist/main.js",
       cwd: "./server",
-      node_args: ["--experimental-specifier-resolution=node"],
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
       },
-      instances: 2
-    }
-  ]
+    },
+  ],
 }
