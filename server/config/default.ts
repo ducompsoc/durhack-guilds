@@ -15,7 +15,6 @@ export default {
     options: {
       cookieOptions: {
         name: "durhack-guilds.x-csrf-token",
-        domain: "guilds.durhack-dev.com",
         sameSite: "strict",
         path: "/",
         secure: false,
@@ -28,7 +27,6 @@ export default {
   session: {
     cookie: {
       name: "durhack-guilds-session",
-      domain: "guilds.durhack-dev.com",
       sameSite: "lax",
       path: "/",
       secure: false,

@@ -9,7 +9,6 @@ export default {
     options: {
       cookieOptions: {
         name: "__Host-durhack-guilds.x-csrf-token",
-        domain: undefined,
         path: "/",
         secure: true,
         sameSite: "strict",
@@ -19,7 +18,6 @@ export default {
   session: {
     cookie: {
       name: "__Host-durhack-guilds-session",
-      domain: undefined,
       path: "/",
       secure: true,
       sameSite: "lax",
