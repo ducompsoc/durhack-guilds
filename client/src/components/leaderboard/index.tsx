@@ -7,7 +7,7 @@ import { getPositionMedal } from "@/lib/rank-emojis";
 import TeamName from "@/components/team-name";
 import { fetchGuildsApi } from "@/lib/api";
 
-import MegaChart from "./mega-chart";
+import MegaChart from "./guild-chart";
 
 export default function Leaderboard() {
   const { data: { teams } = { teams: null } } = useSWR(

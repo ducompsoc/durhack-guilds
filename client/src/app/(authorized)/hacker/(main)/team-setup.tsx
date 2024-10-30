@@ -10,7 +10,7 @@ import useSWRImmutable from "swr";
 export function TeamSetup() {
   const { user, mutateTeam } = useGuildsContext();
   const {
-    data: { name },
+    data: { name } = { name: "" },
     mutate: mutateName,
     isLoading: nameIsLoading,
   } = useSWRImmutable("/teams/generate-name");

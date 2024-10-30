@@ -1,4 +1,3 @@
-import { ClockIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 import { fetchGuildsApi } from "@/lib/api";

@@ -5,6 +5,7 @@ import { useFormState } from "react-hooks-use-form-state";
 import Select from "react-select";
 import useSWR from "swr";
 import ReactPaginate from "react-paginate";
+import type { Guild, Team, Area } from "@durhack/guilds-common/types/index";
 
 import { ButtonModal } from "@/components/button-modal";
 import { fetchGuildsApi } from "@/lib/api";
@@ -12,11 +13,11 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export function TeamsPage() {
   const { mutate: mutateTeams, data: teamsData = { teams: [] } } = useSWR<{
-    teams: any[];
+    teams: Team[];
   }>("/teams");
   const [teams, setTeams, resetForm] = useFormState(teamsData.teams);
   const { data: { guilds } = { guilds: [] } } = useSWR<{
-    guilds: any[];
+    guilds: Guild[];
   }>("/areas");
   const [message, setMessage] = React.useState("");
   const [messageOpen, setMessageOpen] = React.useState(false);
@@ -56,32 +57,32 @@ export function TeamsPage() {
     setPageNumber(0);
   }
 
-  function changeGuild(team: any, name: string) {
+  function changeGuild(team: Team, name: string) {
     const newTeams = [...teams];
     team.area = { guild: { guild_name: name } };
     setTeams(newTeams);
   }
 
-  function changeArea(team: any, area: any) {
+  function changeArea(team: Team, area?: Area) {
     const newTeams = [...teams];
-    team.area.area_id = area.areaId;
+    team.area.area_id = area?.area_id;
     setTeams(newTeams);
   }
 
-  function getGuild(guild_name: string) {
+  function getGuild(guildName?: string) {
     const filteredGuilds = guilds.filter(
-      ({ guildName }) => guildName === guild_name
+      ({ guild_name }) => guild_name === guildName
     );
-    return filteredGuilds.length ? filteredGuilds[0] : null;
+    return filteredGuilds.length ? filteredGuilds[0] : undefined;
   }
 
-  function getArea(guild: any, area_id: number) {
+  function getArea(guild?: Guild, area_id?: number) {
     const filteredAreas =
-      guild?.areas?.filter((area: any) => area.areaId === area_id) ?? [];
+      guild?.areas?.filter((area: Area) => area.area_id === area_id) ?? [];
     return filteredAreas.length ? filteredAreas[0] : null;
   }
 
-  async function saveTeam(team: any) {
+  async function saveTeam(team: Team) {
     if (Number.isInteger(team?.area?.area_id)) {
       try {
         await fetchGuildsApi("/teams/" + team.team_id, {
@@ -142,15 +143,15 @@ export function TeamsPage() {
               </p>
               <select
                 className="by-2 dh-input w-full"
-                value={guild?.guildName ?? ""}
+                value={guild?.guild_name ?? ""}
                 onChange={(e) => changeGuild(team, e.target.value)}
               >
                 <option disabled value="">
                   Assign a guild!
                 </option>
-                {guilds.map(({ guildName }) => (
-                  <option key={guildName} value={guildName}>
-                    {guildName}
+                {guilds.map(({ guild_name }) => (
+                  <option key={guild_name} value={guild_name}>
+                    {guild_name}
                   </option>
                 ))}
               </select>
@@ -160,10 +161,10 @@ export function TeamsPage() {
                 classNamePrefix="dh-select"
                 menuPortalTarget={document.body}
                 styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-                getOptionLabel={(option: any) => option.areaName}
-                getOptionValue={(option: any) => option.areaId}
+                getOptionLabel={(option: Area) => option.name!}
+                getOptionValue={(option: Area) => option.area_id!.toString()}
                 value={area}
-                onChange={(area) => changeArea(team, area)}
+                onChange={(area) => changeArea(team, area ?? undefined)}
               />
               <div className="md:flex md:justify-end">
                 <button

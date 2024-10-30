@@ -18,6 +18,7 @@ export type Team = Prisma.TeamGetPayload<{ select: undefined }> & {
   joinCodeString: string
 }
 export type User = Prisma.UserGetPayload<{ select: undefined }>
+export type UserWithTokens = Prisma.UserGetPayload<{ select: undefined, include: { tokenSet: true } }>
 export type TokenSet = Prisma.TokenSetGetPayload<{ select: undefined }>
 export type Challenge = Prisma.ChallengeGetPayload<{ select: undefined }>
 export { QRCodesCategory, QuestDependencyMode } from "@prisma/client"

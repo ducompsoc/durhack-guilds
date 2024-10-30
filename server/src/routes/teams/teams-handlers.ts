@@ -10,11 +10,12 @@ import {
   uniqueNamesGenerator,
 } from "unique-names-generator"
 import { z } from "zod"
+import type { Team } from "@durhack/guilds-common/types/index"
 
 import { getSession } from "@server/auth/session"
 import { decodeTeamJoinCode } from "@server/common/decode-team-join-code"
 import { requireLoggedIn, requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
-import { type Team, prisma } from "@server/database"
+import { type Team as PrismaTeam, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
 import { UserRole } from "@server/common/model-enums"
 
@@ -90,7 +91,7 @@ class TeamsHandlers {
       response.json({
         status: 200,
         message: "OK",
-        teams: payload,
+        teams: payload satisfies Team[],
       })
     }
   }
@@ -149,7 +150,7 @@ class TeamsHandlers {
       const randomValues = getRandomValues(randomBuffer) // Fill the buffer with random values
       let randomValue = randomValues[0]
 
-      let createdTeam: Team | null = null
+      let createdTeam: PrismaTeam | null = null
       let tryIndex = 0
       while (tryIndex < 10) {
         try {

@@ -48,7 +48,7 @@ model QrCode {
   qrCodeId         Int              @id @default(autoincrement()) @map("qr_code_id")
   challengeId      Int?             @map("challenge_id")
   name             String           @db.VarChar(255)
-  category         QRCodesCategory @default(workshop)
+  category         QRCodesCategory  @default(workshop)
   payload          String           @unique @db.Uuid
   pointsValue      Int              @map("points_value")
   state            Boolean

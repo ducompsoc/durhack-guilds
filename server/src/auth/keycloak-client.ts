@@ -46,6 +46,10 @@ export async function getKeycloakAdminClient() {
 
 export type KeycloakUserInfo = {
   groups: string[]
-  preferred_names: string
   first_names: string
+  preferred_names?: string | undefined
+  last_names: string
+  email: string
+  phone_number?: string | undefined
+  pronouns?: undefined | "he/him" | "she/her" | "they/them" | "xe/xem" | "Please Ask"
 }

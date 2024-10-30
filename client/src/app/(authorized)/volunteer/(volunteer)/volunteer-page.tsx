@@ -6,6 +6,8 @@ import QRCode from "react-qr-code";
 import { useMediaQuery } from "react-responsive";
 import resolveConfig from "tailwindcss/resolveConfig";
 import tailwindConfig from "tailwindcss/defaultConfig";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import type { QR } from "@durhack/guilds-common/types/index";
 
 import { socketManager } from "@/lib/socket";
 import { isAdmin } from "@/lib/is-role";
@@ -13,17 +15,17 @@ import { useGuildsContext } from "@/hooks/use-guilds-context";
 
 import Preset from "./preset";
 import Custom from "./custom";
-import Manage from "./manage";
 import { cn } from "@/lib/utils";
 
 export default function Volunteer() {
   const [current, setCurrent] = useState("Preset");
   const [open, setOpen] = useState(false);
+  const [qrTimeout, setQrTimeout] = useState(false);
+  const firstQrLoad = useRef(true);
   const [qr, setQR] = useState({
     name: "",
     url: "",
     category: "",
-    preset: false,
   });
   const renderedQR = useRef(null);
 
@@ -38,22 +40,29 @@ export default function Volunteer() {
   function getClasses(name: string) {
     return cn(
       "font-semibold pb-4 px-4 inline-flex items-center border-b-[3px] text-sm",
-      (name === current) && "border-accent text-accent" || "",
-      (name !== current) && "border-gray-200 text-gray-500 hover:text-accent hover:border-accent dark:border-neutral-400 dark:text-neutral-400" || ""
+      (name === current && "border-accent text-accent") || "",
+      (name !== current &&
+        "border-gray-200 text-gray-500 hover:text-accent hover:border-accent dark:border-neutral-400 dark:text-neutral-400") ||
+        ""
     );
   }
 
-  async function displayQR(id: number, preset = false) {
+  async function displayQR(id: number) {
     if (!(await socketManager.ensureConnected())) return console.error("Failed to get socket");
+    firstQrLoad.current = true;
 
-    socketManager.onQRChange((qr: any) => {
-      if (!qr) return closeQR()
+    socketManager.onQRChange((qr: QR) => {
+      if (qr == null) return closeQR();
+      if (!firstQrLoad.current) {
+        setQrTimeout(true);
+        setTimeout(() => setQrTimeout(false), 5000);
+      }
+      firstQrLoad.current = false;
 
       setQR({
         name: qr.name,
         url: qr.redemptionUrl,
         category: qr.category,
-        preset,
       });
       setOpen(true);
     });
@@ -84,8 +93,8 @@ export default function Volunteer() {
   ];
 
   function CurrentTab() {
-    const tab = tabs.find((tab) => tab.name === current)
-    return tab && <Fragment key={tab.name}>{tab.content}</Fragment>
+    const tab = tabs.find((tab) => tab.name === current);
+    return tab && <Fragment key={tab.name}>{tab.content}</Fragment>;
   }
 
   return (
@@ -130,12 +139,16 @@ export default function Volunteer() {
                 <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-neutral-700 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                   <div className="bg-white dark:bg-neutral-700 px-4 py-5 sm:p-6 text-center flex flex-col items-center justify-center">
                     <div ref={renderedQR} className="p-4">
-                      <QRCode
-                        value={qr.url}
-                        fgColor={isDark ? "#fff" : "#7d6399"}
-                        /* @ts-ignore */
-                        bgColor={isDark ? theme.colors.neutral[700] : "#fff"}
-                      />
+                      {qrTimeout ? (
+                        <CheckCircleIcon className="stroke-green-600 w-full" />
+                      ) : (
+                        <QRCode
+                          value={qr.url}
+                          fgColor={isDark ? "#fff" : "#7d6399"}
+                          /* @ts-ignore */
+                          bgColor={isDark ? theme.colors.neutral[700] : "#fff"}
+                        />
+                      )}
                     </div>
                     <p className="dark:text-neutral-200">{qr.name}</p>
                   </div>

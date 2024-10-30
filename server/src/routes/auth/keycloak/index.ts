@@ -13,6 +13,11 @@ keycloakApp
   .all(methodNotAllowed(["GET"]))
   .get(rememberUserReferrerForRedirect)
   .get(keycloakHandlers.beginOAuth2Flow())
+  
+keycloakApp
+  .route("/logout")
+  .all(methodNotAllowed(["GET"]))
+  .get(keycloakHandlers.logout())
 
 keycloakApp
   .route("/callback")

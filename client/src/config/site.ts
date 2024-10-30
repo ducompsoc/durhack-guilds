@@ -3,7 +3,7 @@ import { isDevelopment } from "@/lib/environment"
 export const siteConfig = {
   name: "DurHack Guilds",
   description:
-    "DurHack is an annual hackathon event hosted by Durham University Computing Society (compsoc.tech), which is a student society affiliated with Durham Students' Union.",
+    "DurHack Guilds allows you to collect points for your teams and win stash!",
   openGraphImage: "/opengraph-image.png",
   url: "https://guilds.durhack.com",
   themeColor: "#b3824b",

@@ -38,7 +38,7 @@ export default function VolunteerLayout({
   }
 
   function getAdminTabs() {
-    if (isAdmin) return []
+    if (!isAdmin) return []
     return [
       {
         icon: NewspaperIcon,

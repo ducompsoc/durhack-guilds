@@ -13,7 +13,7 @@ const createPointPayloadSchema = z.object({
   redeemerUserId: z.string().uuid(),
 })
 
-const patchPointPaylodSchema = z
+const patchPointPayloadSchema = z
   .object({
     value: z.number().positive().optional(),
     origin_qrcode_id: z.number().positive().optional(),
@@ -140,7 +140,7 @@ class PointHandlers {
       const { point_id } = response.locals
       if (typeof point_id !== "number") throw new Error("Parsed `point_id` not found.")
 
-      const parsed_payload = patchPointPaylodSchema.parse(request.body)
+      const parsed_payload = patchPointPayloadSchema.parse(request.body)
 
       const point = await prisma.point.update({
         where: { pointId: point_id },

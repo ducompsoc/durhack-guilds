@@ -25,6 +25,7 @@ import { teamsApp } from "./teams"
 import { userApp } from "./user"
 import { usersApp } from "./users"
 import { questsApp } from "./quests"
+import { interopApp } from "./interop"
 
 export const apiApp = new App<Request, Response>()
 
@@ -128,5 +129,6 @@ apiApp.use("/users", usersApp)
 apiApp.use("/user", userApp)
 apiApp.use("/discord", discordApp)
 apiApp.use("/quests", questsApp)
+apiApp.use("/interop", interopApp)
 
 apiApp.use(routeFallthroughHandler)

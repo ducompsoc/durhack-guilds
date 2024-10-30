@@ -8,12 +8,10 @@ import { type Team, useTeam } from "@/hooks/use-team";
 
 type GuildContextProps = {
   user: User | null | undefined
-  userError: unknown | undefined
   mutateUser: KeyedMutator<User | null>
   userIsLoading: boolean
 
   team: Team | null | undefined
-  teamError: unknown | undefined
   mutateTeam: KeyedMutator<Team | null>
   teamIsLoading: boolean
 }
@@ -24,16 +22,18 @@ export function GuildsContextProvider({ children }: { children?: React.ReactNode
   const { data: user, error: userError, mutate: mutateUser, isLoading: userIsLoading } = useUser()
   const { data: team, error: teamError, mutate: mutateTeam, isLoading: teamIsLoading } = useTeam()
 
+  // throw the error to the nearest error boundary (error.tsx in app directory)
+  if (userError != null) throw userError
+  if (teamError != null) throw teamError
+
   return (
     <GuildsContextContext.Provider
       value={{
         user,
-        userError,
         mutateUser,
         userIsLoading,
 
         team,
-        teamError,
         mutateTeam,
         teamIsLoading,
       }}

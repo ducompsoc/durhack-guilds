@@ -1,9 +1,11 @@
 import { TokenType } from "@durhack/token-vault/lib"
 import { Server, Socket } from "socket.io"
+import { QR } from "@durhack/guilds-common/types/index"
 
 import TokenVault from "@server/auth/tokens"
-import { type User, prisma } from "@server/database"
+import { type User, UserWithTokens, prisma } from "@server/database"
 import { UserRole } from "@server/common/model-enums"
+import { keycloakClient, KeycloakUserInfo } from "@server/auth/keycloak-client"
 
 type JWTPayload = Awaited<ReturnType<typeof TokenVault.decodeToken>>["payload"]
 
@@ -11,7 +13,7 @@ async function emitQR(id: number, emitter: Socket | Server) {
   const qr = await prisma.qrCode.findUnique({where: { qrCodeId: id }})
   if (!qr) return
 
-  const payload = (await qr.canBeRedeemed()) ? { ...qr } : false
+  const payload: QR | null = (await qr.canBeRedeemed()) ? qr : null
 
   if (emitter instanceof Socket) return emitter.emit("qr", payload)
 
@@ -40,6 +42,7 @@ class SocketConnection {
 
   private isElevatedRole() {
     if (!this.connectedUser) return false
+    if (this.userRoles?.length === 0) return false
     if (this.userRoles?.length === 1 && this.userRoles[0] === UserRole.hacker) return false
     return true;
   }
@@ -63,18 +66,19 @@ class SocketConnection {
       return cb(false)
     }
 
-    let user: User
-    let scope: string[]
+    let user: UserWithTokens
     try {
-      ;({ user, scope } = await TokenVault.getUserAndScopeClaims(decodedPayload))
+      ;({ user } = await TokenVault.getUserAndScopeClaims(decodedPayload))
     } catch (error) {
       return cb(false)
     }
 
-    if (scope.length === 0) return cb(false)
+    if (user?.tokenSet?.accessToken == null) return cb(false)
+
+    const userProfile = await keycloakClient.userinfo<KeycloakUserInfo>(user.tokenSet.accessToken)
 
     this.connectedUser = user
-    this.userRoles = scope as UserRole[]
+    this.userRoles = userProfile.groups as UserRole[]
 
     cb(true)
   }

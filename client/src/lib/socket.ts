@@ -1,13 +1,14 @@
 "use client";
 
 import { io, type Socket } from "socket.io-client";
+import type { QR } from "@durhack/guilds-common/types/index";
 
 import { fetchGuildsApi } from "./api";
 
 class SocketManager {
   private socket: Socket;
   private authenticated = false;
-  private qrCallback?: (qr: any) => void;
+  private qrCallback?: (qr: QR) => void;
 
   constructor() {
     this.socket = io();
@@ -45,11 +46,11 @@ class SocketManager {
     this.qrCallback = undefined;
   }
 
-  onQRChange(cb: (qr: any) => void) {
+  onQRChange(cb: (qr: QR) => void) {
     this.qrCallback = cb;
   }
 
-  qrChange(qr: any) {
+  qrChange(qr: QR) {
     if (this.qrCallback !== undefined) this.qrCallback(qr);
   }
 }

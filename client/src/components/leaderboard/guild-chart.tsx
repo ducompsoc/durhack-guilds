@@ -51,8 +51,15 @@ export default function MegaChart() {
     }
   });
 
+  const guildDisplayNames = new Map([
+    ["Centre of the Earth", "CotE"],
+    ["Atlantis", "Atlantis"],
+    ["Moon", "Moon"],
+    ["Mysterious Island", "MI"],
+  ])
+
   const dataset = {
-    labels: guilds?.map((team: any) => team.guild_name.split(" ")[0]),
+    labels: guilds?.map((team: any) => guildDisplayNames.get(team.guild_name)),
     datasets: [
       {
         label: "Points",

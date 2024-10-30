@@ -1,4 +1,4 @@
-import { type User, prisma, QuestDependencyMode } from "@server/database"
+import { type User, prisma, QuestDependencyMode } from "@server/database";
 
 export async function checkForQuestCompletion(user: User, challengeIds: number[]) {
   const quests = await prisma.quest.findMany({
@@ -22,11 +22,13 @@ export async function checkForQuestCompletion(user: User, challengeIds: number[]
     },
   });
 
+  const queries: Promise<unknown>[] = [];
+
   for (const quest of quests) {
     let completedCount = 0;
     for (const challenge of quest.challenges) {
-      const challengeCompletionCount = challenge.qrCodes.reduce((count, code) => count + code.redeems.length, 0)
-      if (challengeCompletionCount > 0) completedCount += 1
+      const challengeCompletionCount = challenge.qrCodes.reduce((count, code) => count + code.redeems.length, 0);
+      if (challengeCompletionCount > 0) completedCount += 1;
     }
     const completed =
       quest.dependencyMode === QuestDependencyMode.AND
@@ -34,19 +36,25 @@ export async function checkForQuestCompletion(user: User, challengeIds: number[]
         : completedCount > 0;
 
     if (completed) {
-      await prisma.quest.update({
-        where: { questId: quest.questId },
-        data: { usersCompleted: { connect: [{ keycloakUserId: user.keycloakUserId }] } },
-      });
+      queries.push(
+        prisma.$transaction(async (context) => {
+          await context.quest.update({
+            where: { questId: quest.questId },
+            data: { usersCompleted: { connect: [{ keycloakUserId: user.keycloakUserId }] } },
+          });
 
-      if (quest.points > 0) {
-        await prisma.point.create({
-          data: {
-            value: quest.points,
-            redeemerUserId: user.keycloakUserId,
-          },
-        });
-      }
+          if (quest.points > 0) {
+            await context.point.create({
+              data: {
+                value: quest.points,
+                redeemerUserId: user.keycloakUserId,
+              },
+            });
+          }
+        })
+      );
     }
   }
+
+  await Promise.all(queries);
 }

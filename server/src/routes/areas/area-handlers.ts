@@ -1,4 +1,5 @@
 import { HttpStatus, ServerError } from "@otterhttp/errors"
+import { Guild } from "@durhack/guilds-common/types/index"
 
 import { requireUserHasOne, requireUserIsAdmin } from "@server/common/decorators"
 import { UserRole } from "@server/common/model-enums"
@@ -8,15 +9,23 @@ import type { Middleware, Request, Response } from "@server/types"
 class AreaHandlers {
   @requireUserHasOne(UserRole.admin, UserRole.sponsor, UserRole.volunteer)
   getAreasList(): Middleware {
-    return async (request: Request, response: Response): Promise<void> => {
+    return async (_request: Request, response: Response): Promise<void> => {
       const result = await prisma.guild.findMany({
         include: { areas: true },
       })
 
+      const payload = result.map(guild => ({
+        guild_name: guild.guildName,
+        areas: guild.areas.map(area => ({
+          area_id: area.areaId,
+          name: area.areaName,
+        })),
+      }))
+
       response.json({
         status: 200,
         message: "OK",
-        guilds: result,
+        guilds: payload satisfies Guild[],
       })
     }
   }

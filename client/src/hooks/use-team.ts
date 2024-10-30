@@ -2,7 +2,7 @@ import useSWR from "swr";
 
 import { makeGuildsApiRequest } from "@/lib/api";
 
-type TeamMember = {
+export type TeamMember = {
   preferredNames: string
   points: number
   id: string

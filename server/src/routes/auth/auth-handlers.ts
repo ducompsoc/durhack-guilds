@@ -34,20 +34,11 @@ class AuthHandlers {
     }
   }
 
-  handleLogout(): Middleware {
-    return async (request: Request, response: Response) => {
-      const session = await getSession(request, response)
-      await session.destroy()
-      response.status(200)
-      response.json({ status: response.statusCode, message: "OK" })
-    }
-  }
-
   @requireLoggedIn()
   handleGetSocketToken(): Middleware {
     return async (request: Request, response: Response) => {
       const token = await TokenVault.createToken(TokenType.accessToken, request.user!, {
-        scope: request.userProfile?.groups ?? [],
+        scope: ["guilds:socket"],
         lifetime: 1800,
         claims: {
           client_id: "guilds-socket",
