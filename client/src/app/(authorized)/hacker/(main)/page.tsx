@@ -82,16 +82,7 @@ export default function HackerHome() {
               <div className="dh-box p-2 text-center grow basis-0 ml-4 flex flex-col">
                 <h2 className="font-semibold mb-2">Guild</h2>
                 <div className="flex flex-col md:flex-row items-center justify-evenly md:justify-center md:gap-x-4 grow">
-                  <object
-                    data={`/${team?.guild_name}/icon.svg`}
-                    type="image/svg+xml"
-                    className="w-12"
-                  >
-                    <img
-                      src={`/${team?.guild_name}/icon.png`}
-                      alt={`${team?.guild_name} Logo`}
-                    />
-                  </object>
+                  <img className="w-12 h-12" src={`/${team?.guild_name}/icon.png`} alt={`${team?.guild_name} Logo`} />
                   <p className="font-heading text-lg">{team?.guild_name}</p>
                 </div>
               </div>
@@ -130,33 +121,21 @@ export default function HackerHome() {
                 <ExclamationTriangleIcon className="w-6 h-6 mr-2" />
                 No Guild Assigned
               </p>
-              <p>
-                Please speak to a volunteer to ensure your team&apos;s points
-                are recorded!
-              </p>
+              <p>Please speak to a volunteer to ensure your team&apos;s points are recorded!</p>
             </div>
           )}
         </div>
       ) : (
         <TeamSetup />
       )}
-      <button
-        onClick={() => setScanning(true)}
-        className="fixed bottom-14 right-6 bg-accent p-3 rounded-full"
-      >
+      <button onClick={() => setScanning(true)} className="fixed bottom-14 right-6 bg-accent p-3 rounded-full">
         <QrCodeIcon className="w-10 h-10" />
       </button>
       <ButtonModal
         show={scanning}
         onClose={(bool) => setScanning(bool)}
         itemsClass="items-center"
-        content={
-          <Scanner
-            scanning={scanning}
-            scanSuccess={scanSuccess}
-            className="h-96"
-          />
-        }
+        content={<Scanner scanning={scanning} scanSuccess={scanSuccess} className="h-96" />}
         buttons={
           <button
             type="button"
