@@ -23,7 +23,7 @@ class AuthHandlers {
       }
 
       if (
-        request.userProfile.groups.some((userRole) => userRole === UserRole.admin || userRole === UserRole.volunteer)
+        request.userProfile.groups.some((userRole) => userRole === UserRole.admin || userRole === UserRole.volunteer || userRole === UserRole.organiser)
       ) {
         await response.redirect("/volunteer")
         return

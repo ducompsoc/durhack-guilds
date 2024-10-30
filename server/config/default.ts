@@ -42,7 +42,6 @@ export default {
     redirectUri: "http://guilds.durhack-dev.com/api/discord/redirect",
     botToken: "yourDiscordBotTokenHere",
     guildID: "yourDiscordGuildIDHere",
-    inviteLink: "https://discord.gg/xyz",
     teamsParentChannel: "yourTeamsParentChannelIdHere",
   },
   jsonwebtoken: {
