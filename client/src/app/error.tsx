@@ -21,7 +21,7 @@ export default function Home({
           <Image src="/logo.svg" alt="DurHack Logo" width={64} height={64} />
           <h1 className="text-4xl font-bold ml-4 font-heading uppercase">DurHack</h1>
         </div>
-        <p className="text-center mb-6">Something didn't work, please try again.</p>
+        <p className="text-center mb-6">Something didn&apos;t work, please try again.</p>
         <div className="sm:mx-auto sm:w-full sm:max-w-sm space-y-6">
           <button
             onClick={reset}
