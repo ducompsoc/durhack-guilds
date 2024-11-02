@@ -19,7 +19,7 @@ class GuildsHandlers {
       const payload = result.map((guild) => {
         const naivePoints = GuildsHandlers.numberParser.parse(guild.points)
         const members = GuildsHandlers.numberParser.parse(guild.memberCount)
-        const scaledPoints = members > 0 ? (naivePoints * mostMembers) / members : 0
+        const scaledPoints = Math.round(members > 0 ? (naivePoints * mostMembers) / members : 0)
         return {
           guild_name: guild.guildName,
           guild_description: guild.guildDescription,
