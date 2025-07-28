@@ -41,7 +41,7 @@ export default function Preset({ displayQR }: { displayQR: (id: number) => void 
 
   return (
     <>
-      <div className="dh-box p-4 mb-6 flex flex-row items-center">
+      <div className="dh-box p-4 mb-6 relative flex flex-row items-center">
         <input
           type="text"
           className="dh-input w-full pl-10"
