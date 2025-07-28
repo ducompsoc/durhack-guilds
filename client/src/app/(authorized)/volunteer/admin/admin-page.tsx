@@ -100,7 +100,7 @@ export function AdminPage() {
     <>
       <div className="flex flex-col h-full">
         <div className="dh-box p-4">
-          <div className="flex flex-row items-center">
+          <div className="flex flex-row relative items-center">
             <input
               type="text"
               className="dh-input w-full pl-10"
