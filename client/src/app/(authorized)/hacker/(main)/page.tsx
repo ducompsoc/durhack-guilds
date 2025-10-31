@@ -82,7 +82,7 @@ export default function HackerHome() {
               <div className="dh-box p-2 text-center grow basis-0 ml-4 flex flex-col">
                 <h2 className="font-semibold mb-2">Guild</h2>
                 <div className="flex flex-col md:flex-row items-center justify-evenly md:justify-center md:gap-x-4 grow">
-                  <img className="w-12 h-12" src={`/${team?.guild_name}/icon.png`} alt={`${team?.guild_name} Logo`} />
+                  <img className="w-12 h-12" src={`/guilds/${team?.guild_slug}/icon.svg`} alt={`${team?.guild_name} Logo`} />
                   <p className="font-heading text-lg">{team?.guild_name}</p>
                 </div>
               </div>
