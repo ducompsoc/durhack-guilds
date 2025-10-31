@@ -10,6 +10,7 @@ export type TeamMember = {
 
 export type Team = {
   name: string
+  guild_slug: string
   guild_name: string
   join_code: string
   members: TeamMember[]
