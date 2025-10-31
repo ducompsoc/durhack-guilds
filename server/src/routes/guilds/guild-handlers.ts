@@ -22,6 +22,7 @@ class GuildsHandlers {
         const scaledPoints = Math.round(members > 0 ? (naivePoints * mostMembers) / members : 0)
         return {
           guild_name: guild.guildName,
+          guild_slug: guild.guildSlug,
           guild_description: guild.guildDescription,
           points: scaledPoints,
         }
