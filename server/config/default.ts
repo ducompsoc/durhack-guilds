@@ -4,7 +4,7 @@ import type { ConfigIn } from "@server/config/schema"
 
 export default {
   listen: {
-    host: "localhost",
+    host: "127.0.0.1",
     port: 3101, // Guilds project has ports 3100-3199
   },
   origin: "http://guilds.durhack-dev.com",
