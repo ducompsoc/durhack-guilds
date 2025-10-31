@@ -45,21 +45,21 @@ export default function MegaChart() {
 
   guilds?.forEach((guild: any) => {
     guild.image = new Image();
-    guild.image.src = `/${guild.guild_name}/icon.png`;
+    guild.image.src = `/guilds/${guild.guild_slug}/icon.svg`;
     if (guild.points > largestPoints) {
       largestPoints = guild.points;
     }
   });
 
   const guildDisplayNames = new Map([
-    ["Centre of the Earth", "CotE"],
-    ["Atlantis", "Atlantis"],
-    ["Moon", "Moon"],
-    ["Mysterious Island", "MI"],
+    ["ember", "E"],
+    ["hydro", "H"],
+    ["solaris", "S"],
+    ["zephyr", "Z"],
   ])
 
   const dataset = {
-    labels: guilds?.map((team: any) => guildDisplayNames.get(team.guild_name)),
+    labels: guilds?.map((team: any) => guildDisplayNames.get(team.guild_slug)),
     datasets: [
       {
         label: "Points",
