@@ -23,6 +23,19 @@ function redirectToRoot(request: NextRequest) {
   return NextResponse.redirect(new URL("/", request.nextUrl))
 }
 
+function redirectUnauthenticated(request: NextRequest) {
+  const loginUrl = new URL("/api/auth/keycloak/login", siteConfig.url)
+  loginUrl.searchParams.set("destination", request.nextUrl.href)
+  return NextResponse.redirect(loginUrl)
+}
+
+function redirectForbidden(request: NextRequest) {
+  request.nextUrl.searchParams.set("status_code", "403")
+  request.nextUrl.searchParams.set("from", request.nextUrl.pathname)
+  request.nextUrl.pathname = "/error"
+  return NextResponse.redirect(request.nextUrl)
+}
+
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === "/") {
     const userProfile = await getUserProfile(request);
@@ -38,36 +51,35 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/hacker", request.nextUrl))
     }
 
-    // otherwise, the user is not permitted.
-    return NextResponse.redirect(new URL("/forbidden", request.nextUrl))
+    return redirectForbidden(request)
   }
 
   if (request.nextUrl.pathname.startsWith("/hacker") && !request.nextUrl.pathname.startsWith("/hacker/redeem")) {
     const userProfile = await getUserProfile(request);
-    // if the user is not logged in, go back to root
-    if (!userProfile) return redirectToRoot(request)
-    // if the user is not a hacker, go back to root
-    if (!isHacker(userProfile)) return redirectToRoot(request)
+    // if the user is not logged in, prompt them to login
+    if (!userProfile) return redirectUnauthenticated(request)
+    // if the user is not a hacker, they are forbidden from viewing this page
+    if (!isHacker(userProfile)) return redirectForbidden(request)
     // continue as usual
     return
   }
 
   if (request.nextUrl.pathname.startsWith("/volunteer/admin")) {
     const userProfile = await getUserProfile(request);
-    // if the user is not logged in, go back to root
-    if (!userProfile) return redirectToRoot(request)
-    // if the user is not an admin, go back to /volunteer
-    if (!isAdmin(userProfile)) return NextResponse.redirect(new URL("/volunteer", request.nextUrl))
+    // if the user is not logged in, prompt them to login
+    if (!userProfile) return redirectUnauthenticated(request)
+    // if the user is not an admin, they are forbidden from viewing this page
+    if (!isAdmin(userProfile)) return redirectForbidden(request)
     // continue as usual
     return
   }
 
   if (request.nextUrl.pathname.startsWith("/volunteer")) {
     const userProfile = await getUserProfile(request);
-    // if the user is not logged in, go back to root
-    if (!userProfile) return redirectToRoot(request)
-    // if the user is not a volunteer, go back to root
-    if (!isVolunteer(userProfile)) return redirectToRoot(request)
+    // if the user is not logged in, prompt them to login
+    if (!userProfile) return redirectUnauthenticated(request)
+    // if the user is not a volunteer, they are forbidden from viewing this page
+    if (!isVolunteer(userProfile)) return redirectForbidden(request)
     // continue as usual
     return
   }
