@@ -84,6 +84,7 @@ class UserHandlers {
               id: member.keycloakUserId
             }
           }) || [],
+        guild_slug: team.area?.guild.guildSlug || null,
         guild_name: team.area?.guild.guildName || null,
         join_code: team.joinCodeString,
       }
