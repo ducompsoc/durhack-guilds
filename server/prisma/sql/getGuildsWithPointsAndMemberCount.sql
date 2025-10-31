@@ -1,5 +1,6 @@
 SELECT
   guild.guild_name as "guildName",
+  guild.guild_slug as "guildSlug",
   guild.guild_description as "guildDescription",
   SUM(point.value) as "points",
   COUNT(member.keycloak_user_id) as "memberCount"
@@ -10,4 +11,5 @@ LEFT JOIN "User" member on member.team_id = team.team_id
 LEFT JOIN "Point" point on point.redeemer_user_id = member.keycloak_user_id
 GROUP BY
   guild.guild_name,
+  guild.guild_slug,
   guild.guild_description
