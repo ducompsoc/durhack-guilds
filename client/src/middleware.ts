@@ -37,6 +37,9 @@ function redirectForbidden(request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
+  request.nextUrl.host = request.headers.get("Host") ?? request.nextUrl.host
+  if (request.headers.get("Host")?.indexOf(":") === -1) request.nextUrl.port = ""
+
   if (request.nextUrl.pathname === "/") {
     const userProfile = await getUserProfile(request);
     if (!userProfile) return
