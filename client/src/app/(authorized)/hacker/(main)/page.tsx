@@ -68,7 +68,7 @@ export default function HackerHome() {
     } catch {
       qr_id = "invalid";
     }
-    router.push("/hacker/redeem?" + new URLSearchParams({ qr_id }).toString());
+    router.push(`/hacker/redeem?${new URLSearchParams({ qr_id }).toString()}`);
   }
 
   return (
