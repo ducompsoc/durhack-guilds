@@ -5,15 +5,20 @@ import TokenVault from "@server/auth/tokens"
 import { requireLoggedIn } from "@server/common/decorators"
 import { UserRole } from "@server/common/model-enums"
 import type { Middleware, Request, Response } from "@server/types"
+import {HttpStatus} from "@otterhttp/errors";
 
 class AuthHandlers {
   handleLoginSuccess(): Middleware {
     return async (request: Request, response: Response): Promise<void> => {
       const session = await getSession(request, response)
+
       if (session.redirectTo != null) {
-        const redirectTo = session.redirectTo
-        session.redirectTo = undefined
-        await response.redirect(redirectTo)
+        try {
+          await response.redirect(session.redirectTo)
+        } finally {
+          session.redirectTo = undefined
+          await session.commit()
+        }
         return
       }
 
@@ -29,7 +34,12 @@ class AuthHandlers {
         return
       }
 
-      await response.redirect("/hacker")
+      if (request.userProfile.groups.some((userRole) => userRole === UserRole.hacker)) {
+        await response.redirect("/hacker")
+        return
+      }
+
+      response.status(HttpStatus.Forbidden)
       return
     }
   }

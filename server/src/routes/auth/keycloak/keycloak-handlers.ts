@@ -1,13 +1,37 @@
 import type { NextFunction, Request as OtterRequest } from "@otterhttp/app"
 import { ClientError } from "@otterhttp/errors"
 import { type Client, generators } from "openid-client"
+import { z } from "zod/v4"
 
 import { adaptTokenSetToDatabase } from "@server/auth/adapt-token-set"
 import { keycloakClient } from "@server/auth/keycloak-client"
-import { getSession } from "@server/auth/session"
+import { getSession, type GuildsSessionRecord } from "@server/auth/session"
 import { origin } from "@server/config"
 import { type User, prisma } from "@server/database"
 import type { Middleware, Request, Response } from "@server/types"
+
+function urlOriginIsTrusted(url: URL) {
+  if (url.origin === origin) return true
+}
+
+const destinationUrlSchema = z
+  .string()
+  .transform((value, ctx) => {
+    try {
+      return new URL(value)
+    } catch (_error) {
+      ctx.issues.push({
+        input: value,
+        code: "invalid_format",
+        format: "url",
+        message: "Invalid url",
+      })
+      return z.NEVER
+    }
+  })
+  .refine((value) => urlOriginIsTrusted(value), {
+    error: (issue) => `Specified destination origin ${(issue.input as URL).origin} is not trusted`,
+  })
 
 export class KeycloakHandlers {
   client: Client
@@ -16,19 +40,49 @@ export class KeycloakHandlers {
     this.client = client
   }
 
-  async getOrGenerateCodeVerifier(request: Request, response: Response): Promise<string> {
-    const session = await getSession(request, response)
+  /**
+   * 'lazily' log out the user - don't call the keycloak logout endpoint.
+   * Just remove the user ID from the user's session.
+   *
+   * It's important we do this before initiating the keycloak login flow because we downgrade the session cookie to
+   * SameSite 'Lax' during the OAuth flow (not implemented yet -
+   * requires https://github.com/OtterJS/otterhttp-session/issues/1).
+   */
+  private static lazyLogout(response: Response, session: GuildsSessionRecord): void {
+    if (session.userId == null) return
+
+    session.userId = undefined
+    response.sessionDirty = true
+  }
+
+  private static getOrGenerateCodeVerifier(response: Response, session: GuildsSessionRecord): string {
     if (typeof session.keycloakOAuth2FlowCodeVerifier === "string") return session.keycloakOAuth2FlowCodeVerifier
 
     const codeVerifier = generators.codeVerifier()
     session.keycloakOAuth2FlowCodeVerifier = codeVerifier
-    await session.commit()
+    response.sessionDirty = true
     return codeVerifier
+  }
+
+  private static rememberDestination(request: Request, response: Response, session: GuildsSessionRecord): void {
+    const destination = request.query.destination != null ? destinationUrlSchema.parse(request.query.destination) : null
+
+    if (session.redirectTo == null && destination?.href == null) return
+    if (session.redirectTo === destination?.href) return
+
+    session.redirectTo = destination?.href
+    response.sessionDirty = true
   }
 
   beginOAuth2Flow(): Middleware {
     return async (request: Request, response: Response) => {
-      const codeVerifier = await this.getOrGenerateCodeVerifier(request, response)
+      const session = await getSession(request, response)
+      KeycloakHandlers.rememberDestination(request, response, session)
+
+      KeycloakHandlers.lazyLogout(response, session)
+      const codeVerifier = KeycloakHandlers.getOrGenerateCodeVerifier(response, session)
+      if (response.sessionDirty) await session.commit()
+
       const codeChallenge = generators.codeChallenge(codeVerifier)
 
       const url = this.client.authorizationUrl({
@@ -37,7 +91,7 @@ export class KeycloakHandlers {
         code_challenge_method: "S256",
       })
 
-      response.redirect(url)
+      await response.redirect(url)
     }
   }
 
