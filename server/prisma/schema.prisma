@@ -23,6 +23,7 @@ model Area {
 
 model Guild {
   guildId          Int      @id @default(autoincrement()) @map("guild_id")
+  guildSlug        String   @unique @map("guild_slug")
   guildName        String   @map("guild_name") @db.VarChar(255)
   guildDescription String?  @map("guild_description") @db.VarChar(255)
   createdAt        DateTime @default(now()) @map("created_at")
@@ -45,50 +46,50 @@ model Point {
 }
 
 model QrCode {
-  qrCodeId         Int              @id @default(autoincrement()) @map("qr_code_id")
-  challengeId      Int?             @map("challenge_id")
-  name             String           @db.VarChar(255)
-  category         QRCodesCategory  @default(workshop)
-  payload          String           @unique @db.Uuid
-  pointsValue      Int              @map("points_value")
+  qrCodeId         Int             @id @default(autoincrement()) @map("qr_code_id")
+  challengeId      Int?            @map("challenge_id")
+  name             String          @db.VarChar(255)
+  category         QRCodesCategory @default(workshop)
+  payload          String          @unique @db.Uuid
+  pointsValue      Int             @map("points_value")
   state            Boolean
-  creatorUserId    String           @map("creator_id") @db.Uuid
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
+  creatorUserId    String          @map("creator_id") @db.Uuid
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
   redeems          Point[]
-  creator          User             @relation(fields: [creatorUserId], references: [keycloakUserId], onDelete: NoAction)
-  challenge        Challenge?       @relation(fields: [challengeId], references: [challengeId], onDelete: NoAction)
-  claimLimit       Boolean          @map("claim_limit")
-  isBeingDisplayed Boolean          @default(false) @map("is_being_displayed")
+  creator          User            @relation(fields: [creatorUserId], references: [keycloakUserId], onDelete: NoAction)
+  challenge        Challenge?      @relation(fields: [challengeId], references: [challengeId], onDelete: NoAction)
+  claimLimit       Boolean         @map("claim_limit")
+  isBeingDisplayed Boolean         @default(false) @map("is_being_displayed")
 
   @@index([creatorUserId])
   @@index([challengeId])
 }
 
 model Challenge {
-  challengeId Int              @id @default(autoincrement()) @map("challenge_id")
+  challengeId Int             @id @default(autoincrement()) @map("challenge_id")
   qrCodes     QrCode[]
-  claimLimit  Boolean          @map("claim_limit")
-  name        String           @db.VarChar(255)
-  description String           @db.VarChar(255)
+  claimLimit  Boolean         @map("claim_limit")
+  name        String          @db.VarChar(255)
+  description String          @db.VarChar(255)
   points      Int
-  startTime   DateTime?        @map("start_time")
-  expiryTime  DateTime?        @map("expiry_time")
+  startTime   DateTime?       @map("start_time")
+  expiryTime  DateTime?       @map("expiry_time")
   quests      Quest[]
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
   category    QRCodesCategory
 }
 
 model Quest {
-  questId        Int                   @id @default(autoincrement()) @map("quest_id")
-  name           String                @db.VarChar(255)
-  description    String?               @db.VarChar(255)
-  dependencyMode QuestDependencyMode   @default(AND) @map("dependency_mode")
-  points         Int                   @default(0)
+  questId        Int                 @id @default(autoincrement()) @map("quest_id")
+  name           String              @db.VarChar(255)
+  description    String?             @db.VarChar(255)
+  dependencyMode QuestDependencyMode @default(AND) @map("dependency_mode")
+  points         Int                 @default(0)
   challenges     Challenge[]
-  createdAt      DateTime              @default(now()) @map("created_at")
-  updatedAt      DateTime              @updatedAt @map("updated_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
   usersCompleted User[]
 }
 
