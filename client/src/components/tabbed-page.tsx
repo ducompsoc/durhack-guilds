@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
@@ -38,7 +39,7 @@ export function TabbedPage({
     <SWRConfig value={{ fetcher: fetchGuildsApi }}>
       <div className="h-full flex flex-col text-black dark:text-neutral-200">
         <div className="flex flex-row py-4 px-6 items-center justify-evenly">
-          <img src="/logo.svg" alt="DurHack Logo" className="w-16 h-16" />
+          <Image src="/branding/durhack-x-logo-mark.svg" width="17" height="24" alt="DurHack Logo" className="w-16 h-16" />
           <h1 className="text-3xl font-heading uppercase">DurHack</h1>
           <button onClick={() => setOpen(true)}>
             <ArrowRightStartOnRectangleIcon className="w-12 h-12" />

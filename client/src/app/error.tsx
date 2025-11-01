@@ -18,7 +18,7 @@ export default function Home({
     <>
       <div className="h-full flex flex-col text-black dark:text-neutral-200 font-semibold justify-center px-6 py-12 lg:px-8">
         <div className="flex flex-row py-4 px-6 items-center justify-center mb-4">
-          <Image src="/logo.svg" alt="DurHack Logo" width={64} height={64} />
+          <Image src="/branding/durhack-x-logo-mark.svg" alt="DurHack Logo" width={17} height={24} className="size-[64px]" />
           <h1 className="text-4xl font-bold ml-4 font-heading uppercase">DurHack</h1>
         </div>
         <p className="text-center mb-6">Something didn&apos;t work, please try again.</p>
