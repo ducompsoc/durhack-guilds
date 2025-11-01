@@ -85,7 +85,7 @@ export function TeamsPage() {
   async function saveTeam(team: Team) {
     if (Number.isInteger(team?.area?.area_id)) {
       try {
-        await fetchGuildsApi("/teams/" + team.team_id, {
+        await fetchGuildsApi(`/teams/${team.team_id}`, {
           method: "PATCH",
           body: JSON.stringify({ area_code: team.area.area_id }),
           headers: { "Content-Type": "application/json" },
@@ -115,6 +115,7 @@ export function TeamsPage() {
               onChange={(e) => handleSearchText(e.target.value)}
             />
             <MagnifyingGlassIcon className="w-6 h-6 absolute ml-2" />
+
             <button className="dh-btn ml-2" onClick={search}>
               Search
             </button>
