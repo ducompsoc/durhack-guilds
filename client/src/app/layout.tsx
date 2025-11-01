@@ -1,4 +1,5 @@
 import { Audiowide, Inter } from "next/font/google";
+import type * as React from "react";
 
 import { siteConfig } from "@/config/site";
 import "./globals.scss";
@@ -24,19 +25,8 @@ export const metadata = {
   metadataBase: new URL(siteConfig.url),
   description: siteConfig.description,
   icons: {
-    icon: ["/icon/favicon.svg", "/icon/favicon.ico", "/icon/favicon-16x16.png", "/icon/favicon-32x32.png"],
-    shortcut: ["/icon/favicon-16x16.png", "/icon/favicon-32x32.png"],
-    apple: "/icon/apple-touch-icon.png",
-    other: [
-      {
-        rel: "mask-icon",
-        url: "/icon/safari-pinned-tab.svg",
-        color: "#5bbad5",
-      },
-    ],
-  },
-  other: {
-    "msapplication-TileColor": "#008987",
+    icon: ["/icon/favicon.svg", "/icon/favicon.ico", "/icon/favicon.png"],
+    apple: "/icon/apple-icon.png",
   },
   openGraph: {
     type: "website",
