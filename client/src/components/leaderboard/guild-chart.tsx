@@ -53,7 +53,7 @@ export default function MegaChart() {
 
   const guildDisplayNames = new Map([
     ["ember", "E"],
-    ["hydro", "H"],
+    ["noria", "N"],
     ["solaris", "S"],
     ["zephyr", "Z"],
   ])
