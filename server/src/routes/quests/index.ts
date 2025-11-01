@@ -19,6 +19,6 @@ questsApp
 
 questsApp
   .route("/:quest_id")
-  .all(methodNotAllowed(["GET", "PATCH", "DELETE"]))
+  .all(methodNotAllowed(["PATCH"]))
   .all(parseRouteId("quest_id"))
   .patch(questsHandlers.patchQuestDetails(), handleFailedAuthentication)
