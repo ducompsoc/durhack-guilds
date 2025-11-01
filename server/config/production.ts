@@ -40,6 +40,6 @@ export default {
   },
   keycloak: {
     realm: "durhack",
-    redirectUris: ["https://guilds.durhack.com/api/auth/keycloak/redirect"],
+    redirectUris: ["https://guilds.durhack.com/api/auth/keycloak/callback"],
   }
 } satisfies DeepPartial<ConfigIn>
