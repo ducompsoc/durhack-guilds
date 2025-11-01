@@ -58,7 +58,12 @@ class QuestsHandlers {
           },
           usersCompleted: { where: { keycloakUserId: user.keycloakUserId } },
         },
-        where: { challenges: { none: { OR: [{ startTime: { gt: now } }, { expiryTime: { lt: now } }] } } },
+        where: { challenges: { some: { OR: [
+          { AND: [{ startTime: null }, { expiryTime: null }] },
+          { AND: [{ startTime: { lt: now } }, { expiryTime: null }] },
+          { AND: [{ startTime: null }, { expiryTime: { gt: now } }] },
+          { AND: [{ startTime: { lt: now } }, { expiryTime: { gt: now } }] },
+        ] } } },
         orderBy: { updatedAt: "desc" }
       });
 
