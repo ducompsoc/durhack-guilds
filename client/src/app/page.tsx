@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <div className="h-full flex flex-col text-black dark:text-neutral-200 font-semibold justify-center px-6 py-12 lg:px-8">
         <div className="flex flex-row py-4 px-6 items-center justify-center mb-4">
-          <Image src="/branding/durhack-x-logo-mark.svg" alt="DurHack Logo" width={17} height={24} className="size-[64px]" />
+          <Image src="/branding/durhack-x-logo-mark.svg" alt="DurHack Logo" width={17} height={24} className="w-[64px] h-[64px]" />
           <h1 className="text-4xl font-bold ml-4 font-heading uppercase">DurHack</h1>
         </div>
         <div className="sm:mx-auto sm:w-full sm:max-w-sm space-y-6">
