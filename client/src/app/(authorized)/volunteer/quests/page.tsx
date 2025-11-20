@@ -59,7 +59,7 @@ export default function Quests() {
             New Challenge
           </button>
         </div>
-        <div className="flex flex-row items-center dh-box p-4 mb-4">
+        <div className="flex flex-row relative items-center dh-box p-4 mb-4">
           <input
             type="text"
             className="dh-input w-full pl-10"
