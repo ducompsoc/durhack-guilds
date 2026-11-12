@@ -6,7 +6,7 @@ export const siteConfig = {
     "DurHack Guilds allows you to collect points for your teams and win stash!",
   openGraphImage: "/opengraph-image.png",
   url: "https://guilds.durhack.com",
-  themeColor: "#65c7f0",
+  themeColor: "#5900B8",
   sessionCookieName: "__Host-durhack-guilds-session",
 }
 

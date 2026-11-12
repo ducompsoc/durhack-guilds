@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        accent: "#65c7f0"
+        accent: "#5900B8"
       },
       fontFamily: {
         "heading": "var(--durhack-font)"
