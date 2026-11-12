@@ -52,10 +52,9 @@ export default function MegaChart() {
   });
 
   const guildDisplayNames = new Map([
-    ["ember", "E"],
-    ["noria", "N"],
-    ["solaris", "S"],
-    ["zephyr", "Z"],
+    ["skyline", "S"],
+    ["plaza", "P"],
+    ["metro", "M"],
   ])
 
   const dataset = {
